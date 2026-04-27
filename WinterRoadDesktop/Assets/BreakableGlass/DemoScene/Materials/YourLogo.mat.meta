@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f221c83775fefa94f852cd2d16d0ae3a
+timeCreated: 1434650575
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/DemoScene/Materials/YourLogo.mat
+  uploadId: 170123

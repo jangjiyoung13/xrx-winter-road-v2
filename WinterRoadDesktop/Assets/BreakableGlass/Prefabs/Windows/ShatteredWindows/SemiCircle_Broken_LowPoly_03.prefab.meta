@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b1e53a1997cc27844bb2e8212338a5ec
+timeCreated: 1434553764
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/SemiCircle_Broken_LowPoly_03.prefab
+  uploadId: 170123

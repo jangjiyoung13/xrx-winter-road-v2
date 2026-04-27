@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0fda99eb6548c5d4fac67ec8c936c9e7
+timeCreated: 1434547368
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Hi_Poly/Cylinder_HiPoly.prefab
+  uploadId: 170123

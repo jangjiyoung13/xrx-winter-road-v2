@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 98810de36b80cce4e89efc898cffe0ab
+timeCreated: 1434553620
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Cylinder_Broken_HiPoly_02.prefab
+  uploadId: 170123

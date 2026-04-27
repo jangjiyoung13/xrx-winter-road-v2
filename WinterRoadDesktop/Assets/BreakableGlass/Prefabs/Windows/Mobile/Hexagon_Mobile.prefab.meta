@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 95a5275ef6efde54683f936d0ac36de4
+timeCreated: 1434570323
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Mobile/Hexagon_Mobile.prefab
+  uploadId: 170123

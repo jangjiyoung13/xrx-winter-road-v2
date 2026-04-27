@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: aa4a03662518f664fa365eed76a6017d
+timeCreated: 1438719711
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Glassware/ShatteredGlassware/Cup_Coffee01_Broken03.prefab
+  uploadId: 170123

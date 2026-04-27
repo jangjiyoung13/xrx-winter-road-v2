@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 8072940124c296a4385eb9e137a79e05
+timeCreated: 1433503667
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Scripts/Breakable.cs
+  uploadId: 170123

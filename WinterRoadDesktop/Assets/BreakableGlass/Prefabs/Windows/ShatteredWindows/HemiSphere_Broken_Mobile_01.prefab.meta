@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b816183e4d9bca345bb1573e3797efbc
+timeCreated: 1434553686
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/HemiSphere_Broken_Mobile_01.prefab
+  uploadId: 170123

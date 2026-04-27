@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 010d9d9ea4f4bd345b13277b86e26170
+timeCreated: 1434553787
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/SphereHollow_Broken_Mobile_01.prefab
+  uploadId: 170123

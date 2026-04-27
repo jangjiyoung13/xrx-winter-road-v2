@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 20f73a3eedb596f4b9d17f7f8cf00b42
+timeCreated: 1434553860
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Triangle_Broken_LowPoly_03.prefab
+  uploadId: 170123

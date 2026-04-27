@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a7f95a5094ff7f94b9c5f556809e65af
+timeCreated: 1434553817
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Square_Broken_HiPoly_03.prefab
+  uploadId: 170123

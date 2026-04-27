@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 16dcf15ea2360db4db4370220bd6b158
+timeCreated: 1434547379
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Hi_Poly/Pentagon_HiPoly.prefab
+  uploadId: 170123

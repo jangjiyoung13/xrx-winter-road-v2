@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7998797f966f20d459be54ae9435d9fe
+timeCreated: 1434553828
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Square_Broken_Mobile_02.prefab
+  uploadId: 170123

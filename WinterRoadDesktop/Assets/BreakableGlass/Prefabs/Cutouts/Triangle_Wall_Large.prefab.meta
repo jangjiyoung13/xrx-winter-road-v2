@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2a04584f852c02a4fa08ca99970a4ee3
+timeCreated: 1434547440
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Cutouts/Triangle_Wall_Large.prefab
+  uploadId: 170123

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4156547922b43e04da526987ba8a5c1a
+timeCreated: 1434553581
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/ArchedTop_Broken_LowPoly_03.prefab
+  uploadId: 170123

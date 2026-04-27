@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 805a7399e6072fb4ba4c9e1b1f857b80
+timeCreated: 1438719693
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Glassware/ShatteredGlassware/Bottle_Potion02_Broken01.prefab
+  uploadId: 170123

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b28ef3bed2dd4c14b9aa86594ad996c8
+timeCreated: 1434642112
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Materials/Glass_Stained.mat
+  uploadId: 170123

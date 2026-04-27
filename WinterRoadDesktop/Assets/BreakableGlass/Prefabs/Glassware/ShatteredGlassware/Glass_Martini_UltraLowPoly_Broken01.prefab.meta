@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a5e6f7121007477439e24a8949d2ffe8
+timeCreated: 1444877709
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Glassware/ShatteredGlassware/Glass_Martini_UltraLowPoly_Broken01.prefab
+  uploadId: 170123

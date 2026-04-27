@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8c2fa667695f0454b84819663c702ec1
+timeCreated: 1434553766
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/SemiCircle_Broken_Mobile_01.prefab
+  uploadId: 170123

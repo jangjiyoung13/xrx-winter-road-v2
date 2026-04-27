@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 334caae70db34f64d878de73ff26081d
+timeCreated: 1434570316
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Mobile/Cylinder_Mobile.prefab
+  uploadId: 170123

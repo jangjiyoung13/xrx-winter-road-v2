@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e741b019a9dfc0542a88ca952721f99c
+timeCreated: 1463663630
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/DemoScene/Materials/DemoFreeWoodMat.mat
+  uploadId: 170123

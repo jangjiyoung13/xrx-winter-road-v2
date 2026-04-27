@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2eb9fee0b1d846348ad9c7b38b52dd39
+timeCreated: 1434553672
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/HalfCylinder_Broken_Mobile_02.prefab
+  uploadId: 170123

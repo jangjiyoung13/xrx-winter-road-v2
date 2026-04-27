@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 715b502d4a56fb0408573e9c421f3a6e
+timeCreated: 1434570318
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Mobile/HalfCylinder_Mobile.prefab
+  uploadId: 170123

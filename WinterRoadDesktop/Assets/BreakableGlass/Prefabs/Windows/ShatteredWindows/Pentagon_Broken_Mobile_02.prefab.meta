@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 067874946d5d8b84dbec5ff54b3d113e
+timeCreated: 1434553729
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Pentagon_Broken_Mobile_02.prefab
+  uploadId: 170123

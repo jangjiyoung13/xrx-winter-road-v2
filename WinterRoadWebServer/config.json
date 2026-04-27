@@ -1,0 +1,33 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 3000,
+    "protocol": "http"
+  },
+  "websocket": {
+    "protocol": "ws"
+  },
+  "game": {
+    "defaultRoomId": "main_room",
+    "gameDuration": 60,
+    "lobbyDuration": 30,
+    "countdownDuration": 0,
+    "maxPlayers": 100,
+    "pressRateLimit": 10,
+    "botName": "WinterBot",
+    "botPressIntervalMin": 300,
+    "botPressIntervalMax": 800
+  },
+  "osc": {
+    "enabled": true,
+    "host": "192.168.0.13",
+    "port": 50013
+  },
+  "ddns": {
+    "enabled": false,
+    "provider": "dynu",
+    "hostname": "",
+    "password": "",
+    "updateIntervalMinutes": 5
+  }
+}

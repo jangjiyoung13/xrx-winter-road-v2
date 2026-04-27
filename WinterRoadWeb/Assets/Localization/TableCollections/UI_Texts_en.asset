@@ -1,0 +1,135 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: UI_Texts_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 7b5d5adfb2700ea4ba8f7e0fc7031c75, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 55787049058295808
+    m_Localized: Please enter a nickname.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238848
+    m_Localized: Enter nickname
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238849
+    m_Localized: Please select an ability.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238850
+    m_Localized: Joy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238851
+    m_Localized: Sorrow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238852
+    m_Localized: Courage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238853
+    m_Localized: Love
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238854
+    m_Localized: Hope
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238855
+    m_Localized: Friendship
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238856
+    m_Localized: Enter
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238857
+    m_Localized: Players in Lobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433152
+    m_Localized: If the game starts with 1 player, an NPC will join.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433153
+    m_Localized: Game Start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433154
+    m_Localized: Time Remaining
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433155
+    m_Localized: Tap the screen as fast as you can when the game starts!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433156
+    m_Localized: Ranking Results
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433157
+    m_Localized: Exit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433158
+    m_Localized: Capture
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433159
+    m_Localized: Please enter a nickname!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433160
+    m_Localized: Nickname must be at least 2 characters long.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433161
+    m_Localized: Nickname can be up to 12 characters max!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433162
+    m_Localized: Special characters cannot be used in nicknames!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433163
+    m_Localized: Please select Yeti's ability!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433164
+    m_Localized: 'System Error: Program not found.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433165
+    m_Localized: Server timeout. Please try again.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433166
+    m_Localized: Game in progress.\n Ends in {0}m {1}s.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433167
+    m_Localized: Entry state error
+    m_Metadata:
+      m_Items: []
+  - m_Id: 56462421236113408
+    m_Localized: For the best experience,\nplease adjust your device volume.
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

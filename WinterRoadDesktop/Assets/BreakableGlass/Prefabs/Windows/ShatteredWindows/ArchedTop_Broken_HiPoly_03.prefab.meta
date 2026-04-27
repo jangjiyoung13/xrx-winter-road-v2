@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 95a042b6a69ec424c8c6f13e0dcf118e
+timeCreated: 1434553573
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/ArchedTop_Broken_HiPoly_03.prefab
+  uploadId: 170123

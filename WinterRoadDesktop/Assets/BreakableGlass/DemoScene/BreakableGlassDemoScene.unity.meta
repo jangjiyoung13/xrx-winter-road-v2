@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bbf75e1ea2142f147b7807221ca0bbbf
+timeCreated: 1433516104
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/DemoScene/BreakableGlassDemoScene.unity
+  uploadId: 170123

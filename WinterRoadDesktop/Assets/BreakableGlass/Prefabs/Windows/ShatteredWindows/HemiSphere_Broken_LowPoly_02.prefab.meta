@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4180fd6daf28a4c4e82562cf561d2dce
+timeCreated: 1434553683
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/HemiSphere_Broken_LowPoly_02.prefab
+  uploadId: 170123

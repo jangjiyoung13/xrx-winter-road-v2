@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a4e528a250717e248b4b30261af9834e
+timeCreated: 1444877712
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Glassware/Glass_Marini_UltraLowPoly.prefab
+  uploadId: 170123

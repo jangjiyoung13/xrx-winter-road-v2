@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5303aa71fbf55a740bd78079c3b2cd67
+timeCreated: 1434547374
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Hi_Poly/HemiSphere_HiPoly.prefab
+  uploadId: 170123

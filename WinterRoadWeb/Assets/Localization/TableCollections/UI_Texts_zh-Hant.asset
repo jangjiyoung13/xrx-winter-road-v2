@@ -1,0 +1,135 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: UI_Texts_zh-Hant
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: zh-Hant
+  m_SharedData: {fileID: 11400000, guid: 7b5d5adfb2700ea4ba8f7e0fc7031c75, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 55787049058295808
+    m_Localized: "\u8ACB\u8F38\u5165\u8981\u4F7F\u7528\u7684\u66B1\u7A31"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238848
+    m_Localized: "\u8ACB\u8F38\u5165\u66B1\u7A31"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238849
+    m_Localized: "\u8ACB\u9078\u64C7\u80FD\u529B"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238850
+    m_Localized: "\u559C\u6085"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238851
+    m_Localized: "\u60B2\u50B7"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238852
+    m_Localized: "\u52C7\u6C23"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238853
+    m_Localized: "\u611B"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238854
+    m_Localized: "\u5E0C\u671B"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238855
+    m_Localized: "\u53CB\u60C5"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238856
+    m_Localized: "\u9032\u5165"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238857
+    m_Localized: "\u7B49\u5F85\u5BA4\u4EBA\u6578"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433152
+    m_Localized: "\u5982\u679C\u53EA\u67091\u4EBA\u958B\u59CB\u904A\u6232\uFF0CNPC\u5C07\u6703\u52A0\u5165\u3002"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433153
+    m_Localized: "\u904A\u6232\u958B\u59CB"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433154
+    m_Localized: "\u5269\u9918\u6642\u9593"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433155
+    m_Localized: "\u904A\u6232\u958B\u59CB\u5F8C\uFF0C\u8ACB\u5FEB\u901F\u9EDE\u64CA\u87A2\u5E55\uFF01"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433156
+    m_Localized: "\u6392\u540D\u7D50\u679C"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433157
+    m_Localized: "\u9000\u51FA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433158
+    m_Localized: "\u622A\u5716"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433159
+    m_Localized: "\u8ACB\u8F38\u5165\u66B1\u7A31\uFF01"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433160
+    m_Localized: "\u66B1\u7A31\u81F3\u5C11\u9700\u89812\u500B\u5B57\u5143\u3002"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433161
+    m_Localized: "\u66B1\u7A31\u6700\u591A\u53EA\u80FD\u8F38\u516512\u500B\u5B57\u5143\uFF01"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433162
+    m_Localized: "\u66B1\u7A31\u4E2D\u4E0D\u80FD\u4F7F\u7528\u7279\u6B8A\u5B57\u5143\uFF01"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433163
+    m_Localized: "\u8ACB\u9078\u64C7\u96EA\u602A\u7684\u80FD\u529B\uFF01"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433164
+    m_Localized: "\u7CFB\u7D71\u932F\u8AA4\uFF1A\u627E\u4E0D\u5230\u7A0B\u5F0F\u3002"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433165
+    m_Localized: "\u4F3A\u670D\u5668\u56DE\u61C9\u903E\u6642\uFF0C\u8ACB\u91CD\u8A66\u3002"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433166
+    m_Localized: "\u904A\u6232\u9032\u884C\u4E2D\u3002\\n \u5C07\u5728{0}\u5206{1}\u79D2\u5F8C\u7D50\u675F\u3002"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433167
+    m_Localized: "\u5165\u5834\u72C0\u614B\u932F\u8AA4"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 56462421236113408
+    m_Localized: "\u70BA\u4E86\u7372\u5F97\u6700\u4F73\u7684\u904A\u6232\u9AD4\u9A57\uFF0C\\n\u8ACB\u8ABF\u6574\u88DD\u7F6E\u97F3\u91CF"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

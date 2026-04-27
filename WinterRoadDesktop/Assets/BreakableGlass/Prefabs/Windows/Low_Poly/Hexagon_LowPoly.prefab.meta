@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f19f49ab878140a40b8c88e7a1a97b59
+timeCreated: 1434569936
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Low_Poly/Hexagon_LowPoly.prefab
+  uploadId: 170123

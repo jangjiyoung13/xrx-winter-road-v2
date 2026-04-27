@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4e7a13cf73fbd4a48986c1418cdeb57d
+timeCreated: 1434553591
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Circle_Broken_HiPoly_02.prefab
+  uploadId: 170123

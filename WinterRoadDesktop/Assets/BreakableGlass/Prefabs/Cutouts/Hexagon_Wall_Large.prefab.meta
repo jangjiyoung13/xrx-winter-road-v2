@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8749f06f8d7284942b557bc578291822
+timeCreated: 1434547461
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Cutouts/Hexagon_Wall_Large.prefab
+  uploadId: 170123

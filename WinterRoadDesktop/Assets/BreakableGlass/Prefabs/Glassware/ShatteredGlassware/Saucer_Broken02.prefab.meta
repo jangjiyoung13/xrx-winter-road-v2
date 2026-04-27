@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 722ffd4f14714004a83cdfd26a2c986e
+timeCreated: 1438719729
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Glassware/ShatteredGlassware/Saucer_Broken02.prefab
+  uploadId: 170123

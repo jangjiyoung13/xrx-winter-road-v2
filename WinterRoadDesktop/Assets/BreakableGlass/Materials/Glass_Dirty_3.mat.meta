@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: aaa4e185b5b90dc478f802618e2089b2
+timeCreated: 1434641612
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Materials/Glass_Dirty_3.mat
+  uploadId: 170123

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b8c07bdbed809ce48864c9bc41c9edd3
+timeCreated: 1438719051
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Glassware/Bottle_Beer01.prefab
+  uploadId: 170123

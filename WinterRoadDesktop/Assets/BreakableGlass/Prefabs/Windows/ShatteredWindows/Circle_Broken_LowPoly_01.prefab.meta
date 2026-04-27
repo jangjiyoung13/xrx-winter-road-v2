@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6af7c15dab8d86249944bed418e73c36
+timeCreated: 1434553603
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Circle_Broken_LowPoly_01.prefab
+  uploadId: 170123

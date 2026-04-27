@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 526d8b93a53cf504ea029a91f244a71f
+timeCreated: 1434553668
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/HalfCylinder_Broken_LowPoly_03.prefab
+  uploadId: 170123

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0cbdaa7439567f84598516e3a66ce667
+timeCreated: 1438719065
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Glassware/Cup_Tea.prefab
+  uploadId: 170123

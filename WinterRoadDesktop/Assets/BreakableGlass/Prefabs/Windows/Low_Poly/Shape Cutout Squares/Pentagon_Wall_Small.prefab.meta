@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ba7f572de5a99b9489384a3e1a88c829
+timeCreated: 1434594235
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Low_Poly/Shape Cutout Squares/Pentagon_Wall_Small.prefab
+  uploadId: 170123

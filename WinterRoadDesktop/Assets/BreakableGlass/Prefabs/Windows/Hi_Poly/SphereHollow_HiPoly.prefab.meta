@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ff76a5d43386db04e9f6a4b5c65a72d4
+timeCreated: 1434547386
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Hi_Poly/SphereHollow_HiPoly.prefab
+  uploadId: 170123

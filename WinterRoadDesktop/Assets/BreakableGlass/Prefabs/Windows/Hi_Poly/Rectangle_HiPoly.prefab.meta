@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 91938abbc8f78a6448a969d192ed8cb4
+timeCreated: 1434547381
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Hi_Poly/Rectangle_HiPoly.prefab
+  uploadId: 170123

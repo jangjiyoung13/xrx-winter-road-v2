@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8cff3ad7ddf927f48854ee071e330b97
+timeCreated: 1434547393
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Hi_Poly/Square_HiPoly.prefab
+  uploadId: 170123

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b1d3fcdbefede8c4e954efe3194390c5
+timeCreated: 1434640877
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Hi_Poly/Shape Cutout Squares/ArchedTop_Wall_Square.prefab
+  uploadId: 170123

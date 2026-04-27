@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bfe801926bb2f724ca360f1c4bf8797b
+timeCreated: 1433985017
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Materials/Emissive.mat
+  uploadId: 170123

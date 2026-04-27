@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: dc280c8a646b79542a6f9b4a5b2fce6e
+timeCreated: 1434553587
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/ArchedTop_Broken_Mobile_03.prefab
+  uploadId: 170123

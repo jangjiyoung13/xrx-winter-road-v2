@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4ee0434a5d961304d82a9ab8f5b052f9
+timeCreated: 1434553743
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Rectangle_Broken_LowPoly_01.prefab
+  uploadId: 170123

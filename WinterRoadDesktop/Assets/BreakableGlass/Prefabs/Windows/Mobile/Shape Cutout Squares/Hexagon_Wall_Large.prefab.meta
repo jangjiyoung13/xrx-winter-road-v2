@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ca201084f2a10d848af463f782760023
+timeCreated: 1434641086
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Mobile/Shape Cutout Squares/Hexagon_Wall_Large.prefab
+  uploadId: 170123

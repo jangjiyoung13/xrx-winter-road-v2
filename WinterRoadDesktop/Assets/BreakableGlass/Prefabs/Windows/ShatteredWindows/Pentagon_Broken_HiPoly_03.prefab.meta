@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: df85285d26b120a4d98e8d0a93ccdb99
+timeCreated: 1434553719
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Pentagon_Broken_HiPoly_03.prefab
+  uploadId: 170123

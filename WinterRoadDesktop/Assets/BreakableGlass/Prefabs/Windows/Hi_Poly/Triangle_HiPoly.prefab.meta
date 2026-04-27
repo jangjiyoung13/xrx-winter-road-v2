@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5136c07189c0c7f44b407bf43bee1272
+timeCreated: 1434547396
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Hi_Poly/Triangle_HiPoly.prefab
+  uploadId: 170123

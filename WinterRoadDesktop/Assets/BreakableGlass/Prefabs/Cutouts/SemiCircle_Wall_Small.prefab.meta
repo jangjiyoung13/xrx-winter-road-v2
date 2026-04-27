@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cfe1303e16ef33347a9499939f07bce9
+timeCreated: 1434547454
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Cutouts/SemiCircle_Wall_Small.prefab
+  uploadId: 170123

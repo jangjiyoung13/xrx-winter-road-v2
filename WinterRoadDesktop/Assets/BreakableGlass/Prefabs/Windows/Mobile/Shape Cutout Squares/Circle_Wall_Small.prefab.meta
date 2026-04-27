@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c9ce87949bd88364da90802979ef30b7
+timeCreated: 1434641088
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Mobile/Shape Cutout Squares/Circle_Wall_Small.prefab
+  uploadId: 170123

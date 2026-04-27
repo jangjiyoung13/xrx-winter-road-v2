@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cd64ab7377728fb41830c908caa9728f
+timeCreated: 1434553702
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Hexagon_Broken_LowPoly_01.prefab
+  uploadId: 170123

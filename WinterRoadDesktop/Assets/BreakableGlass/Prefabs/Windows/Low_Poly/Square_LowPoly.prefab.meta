@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: af2fadf31f3b2ea4394024ea486d456f
+timeCreated: 1434569948
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Low_Poly/Square_LowPoly.prefab
+  uploadId: 170123

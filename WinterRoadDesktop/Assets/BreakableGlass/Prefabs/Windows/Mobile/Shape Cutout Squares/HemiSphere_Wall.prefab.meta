@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 206c53699a7f37f42b70a75ab0b6a09f
+timeCreated: 1434641092
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Mobile/Shape Cutout Squares/HemiSphere_Wall.prefab
+  uploadId: 170123

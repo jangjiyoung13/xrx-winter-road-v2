@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags: []
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - World
+  - Water
+  - UI
+  - Effect
+  - Video
+  - Character
+  - CrystarlBall
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: World
+    uniqueID: 3105230827
+    locked: 0
+  - name: Character
+    uniqueID: 92865753
+    locked: 0
+  - name: CrystarlBall
+    uniqueID: 2448172095
+    locked: 0
+  - name: UI
+    uniqueID: 185280343
+    locked: 0

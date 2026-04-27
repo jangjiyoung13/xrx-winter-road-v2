@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1efb3608f16aa29439e498bdd7fc017d
+timeCreated: 1434553659
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/HalfCylinder_Broken_HiPoly_01.prefab
+  uploadId: 170123

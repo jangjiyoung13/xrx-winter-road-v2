@@ -1,0 +1,140 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: UI_Texts Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: UI_Texts
+  m_TableCollectionNameGuidString: 7b5d5adfb2700ea4ba8f7e0fc7031c75
+  m_Entries:
+  - m_Id: 55787049058295808
+    m_Key: LABEL_NICKNAME_NOTICE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238848
+    m_Key: INPUTFIELD_NICKNAME_NOTICE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238849
+    m_Key: LABEL_ABILITY_NOTICE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 56462421236113408
+    m_Key: LABEL_NICKNAME_SOUND_NOTICE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238850
+    m_Key: ABILITY_NAME_HAPPY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238851
+    m_Key: ABILITY_NAME_SAD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238852
+    m_Key: ABILITY_NAME_COURAGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238853
+    m_Key: ABILITY_NAME_LOVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238854
+    m_Key: ABILITY_NAME_HOPE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238855
+    m_Key: ABILITY_NAME_FRIENDSHIP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238856
+    m_Key: BUTTON_NICKNAME_ENTER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049100238857
+    m_Key: LABEL_LOBBY_PLAYER_HEADER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433152
+    m_Key: LABEL_LOBBY_PLAYER_NOTICE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433153
+    m_Key: LABEL_LOBBY_TIMER_HEADER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433154
+    m_Key: LABEL_LOBBY_TIMER_NOTICE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433155
+    m_Key: LABEL_LOBBY_RULE_NOTICE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433156
+    m_Key: LABEL_RESULT_RANK_HEADER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433157
+    m_Key: BTN_RESULT_EXIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433158
+    m_Key: BTN_RESULT_CAPTURE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433159
+    m_Key: SYS_ERROR_NICKNAME_EMPTY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433160
+    m_Key: SYS_ERROR_NICKNAME_TOO_SHORT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433161
+    m_Key: SYS_ERROR_NICKNAME_TOO_LONG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433162
+    m_Key: SYS_ERROR_NICKNAME_INVALID_CHARS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433163
+    m_Key: SYS_ERROR_ELEMENT_NOT_SELECTED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433164
+    m_Key: SYS_ERROR_SYSTEM_NOT_FOUND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433165
+    m_Key: SYS_ERROR_SERVER_TIMEOUT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433166
+    m_Key: SYS_ERROR_GAME_IN_PROGRESS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55787049104433167
+    m_Key: SYS_ERROR_UNKNOWN_STATE
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 1408651514166640688
+  references:
+    version: 2
+    RefIds:
+    - rid: 1408651514166640688
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1762242102061

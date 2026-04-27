@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0b3c46301ecf81e47989abb63ade5a88
+timeCreated: 1438719716
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Glassware/ShatteredGlassware/Cup_Tea_Broken03.prefab
+  uploadId: 170123

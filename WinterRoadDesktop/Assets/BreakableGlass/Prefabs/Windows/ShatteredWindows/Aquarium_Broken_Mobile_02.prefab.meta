@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c080060f82c8f9f43828356fd2b97522
+timeCreated: 1434553565
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Aquarium_Broken_Mobile_02.prefab
+  uploadId: 170123

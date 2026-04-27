@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5ed3cc39d07b1184b8de79d9a99d6b0d
+timeCreated: 1434640805
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Hi_Poly/Shape Cutout Squares/SemiCircle_Wall_Small.prefab
+  uploadId: 170123

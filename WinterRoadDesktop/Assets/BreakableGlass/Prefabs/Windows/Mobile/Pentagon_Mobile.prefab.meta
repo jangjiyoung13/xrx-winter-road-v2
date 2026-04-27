@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e0625cdb664dc4b429d77dcb148c298b
+timeCreated: 1434570325
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Mobile/Pentagon_Mobile.prefab
+  uploadId: 170123

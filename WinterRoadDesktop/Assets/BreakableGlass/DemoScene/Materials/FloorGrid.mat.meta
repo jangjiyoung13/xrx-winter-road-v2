@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6dd2451a792a6a145b7ea48d184c71d6
+timeCreated: 1438827270
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/DemoScene/Materials/FloorGrid.mat
+  uploadId: 170123

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b64c7d56ec7bd824db034ba05fa4f513
+timeCreated: 1434553643
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Cylinder_Broken_LowPoly_03.prefab
+  uploadId: 170123

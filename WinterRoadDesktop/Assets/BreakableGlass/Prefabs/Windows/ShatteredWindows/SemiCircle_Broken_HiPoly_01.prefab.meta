@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 66e1d8e82f1c169428bbd980e50d1fee
+timeCreated: 1434553754
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/SemiCircle_Broken_HiPoly_01.prefab
+  uploadId: 170123

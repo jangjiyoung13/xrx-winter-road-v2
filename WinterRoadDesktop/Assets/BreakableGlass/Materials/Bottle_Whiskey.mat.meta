@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2aa58c3a1751d4241801b4eb91dfa1f8
+timeCreated: 1438912263
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Materials/Bottle_Whiskey.mat
+  uploadId: 170123

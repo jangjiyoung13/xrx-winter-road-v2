@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9ca7b928779459849a19e7d703a78c90
+timeCreated: 1434553559
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Aquarium_Broken_LowPoly_01.prefab
+  uploadId: 170123

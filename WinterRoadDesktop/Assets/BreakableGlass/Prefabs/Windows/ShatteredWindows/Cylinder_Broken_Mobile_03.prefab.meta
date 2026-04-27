@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c278924610e48d942ad5e212daee9df7
+timeCreated: 1434553650
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Cylinder_Broken_Mobile_03.prefab
+  uploadId: 170123

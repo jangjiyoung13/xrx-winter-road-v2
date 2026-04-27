@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8a54a22b83ffaa94185f7866bc7c2607
+timeCreated: 1434553808
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/SphereSolid_Broken_Mobile_02.prefab
+  uploadId: 170123

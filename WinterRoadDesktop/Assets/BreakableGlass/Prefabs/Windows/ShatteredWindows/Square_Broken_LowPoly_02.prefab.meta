@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ae8fd9b7719c8a243af0f5ac548a64ad
+timeCreated: 1434553825
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Square_Broken_LowPoly_02.prefab
+  uploadId: 170123

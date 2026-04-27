@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 233ba142d400f2142b02e4ee591fd918
+timeCreated: 1434570327
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Mobile/Rectangle_Mobile.prefab
+  uploadId: 170123

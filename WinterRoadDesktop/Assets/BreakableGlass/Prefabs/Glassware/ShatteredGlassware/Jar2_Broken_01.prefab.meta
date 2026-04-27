@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5a2bb90422643364eb50b7a4532a069b
+timeCreated: 1490632719
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Glassware/ShatteredGlassware/Jar2_Broken_01.prefab
+  uploadId: 170123

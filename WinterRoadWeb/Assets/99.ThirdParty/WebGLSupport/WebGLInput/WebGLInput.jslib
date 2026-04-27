@@ -1,0 +1,201 @@
+var WebGLInput = {
+    $instances: [],
+	WebGLInputInit : function() {
+		// Remove the `Runtime` object from "v1.37.27: 12/24/2017"
+		// if Runtime not defined. create and add functon!!
+		if(typeof Runtime === "undefined") Runtime = { dynCall : dynCall }
+
+		//var fontFaceStyle = document.createElement('style');
+    	//fontFaceStyle.appendChild(document.createTextNode(
+        //'@font-face {' +
+        //'font-family: "onemobilepop";' +
+        //'src: url("Template/ONE_Mobile_POP.ttf") format("truetype");' +
+        //'}'
+    	//));
+	},
+    WebGLInputCreate: function (canvasId, x, y, width, height, fontsize, text, placeholder, isMultiLine, isPassword, isHidden, isMobile) {
+
+        var container = document.getElementById(UTF8ToString(canvasId));
+        var canvas = document.getElementsByTagName('canvas')[0];
+
+        // if container is null and have canvas
+        if (!container && canvas)
+        {
+            // set the container to canvas.parentNode
+            container = canvas.parentNode;
+        }
+
+		if(canvas)
+		{
+			var scaleX = container.offsetWidth / canvas.width;
+			var scaleY = container.offsetHeight / canvas.height;
+
+			if(scaleX && scaleY)
+			{
+				x *= scaleX;
+				width *= scaleX;
+				y *= scaleY;
+				height *= scaleY;
+			}
+		}
+
+        var input = document.createElement(isMultiLine?"textarea":"input");
+
+	if(isMobile) {
+		input.style.position = "fixed";  // fixed로 변경하여 키보드로 인한 화면 밀림 방지
+		input.style.top = 0 + "px";
+		input.style.left = 0 + "px";
+		input.style.width = 100 + "%";
+		input.style.height = 80 + "px";
+		input.style.fontSize = 24 + "px";
+		input.style.borderWidth = 5 + "px";
+		input.style.borderColor = "#000000";
+		input.style.zIndex = 10000;  // Unity 캔버스보다 위에 표시
+		input.style.transform = "translateZ(0)";  // 하드웨어 가속 활성화
+		input.style.webkitTransform = "translateZ(0)";
+	} else {
+		input.style.position = "absolute";
+		input.style.top = y + "px";
+		input.style.left = x + "px";
+		input.style.width = width + "px";
+		input.style.height = height + "px";
+		input.style.fontSize = fontsize + "px";
+	}
+
+	input.style.outlineWidth = 1 + 'px';
+	input.style.opacity = isHidden?0:1;
+	input.style.resize = 'none'; // for textarea
+	input.style.padding = '0px 1px';
+	input.style.cursor = "default";
+	input.style.touchAction = 'manipulation'; // for mobile
+
+		//폰트적용
+		//input.style.fontFamily = "onemobilepop";
+
+		input.spellcheck = false;
+		input.value = UTF8ToString(text);
+		input.placeholder = UTF8ToString(placeholder);
+		
+		if(isPassword){
+			input.type = 'password';
+		}
+
+		if(isMobile) {
+			document.body.appendChild(input);
+		} else {
+	        container.appendChild(input);
+		}
+        return instances.push(input) - 1;
+    },
+	WebGLInputEnterSubmit: function(id, falg){
+		var input = instances[id];
+		// for enter key
+		input.addEventListener('keydown', function(e) {
+			if ((e.which && e.which === 13) || (e.keyCode && e.keyCode === 13)) {
+				if(falg)
+				{
+					e.preventDefault();
+					input.blur();
+				}
+			}
+		});
+    },
+	WebGLInputTab:function(id, cb) {
+		var input = instances[id];
+		// for tab key
+        input.addEventListener('keydown', function (e) {
+            if ((e.which && e.which === 9) || (e.keyCode && e.keyCode === 9)) {
+                e.preventDefault();
+
+				// if enable tab text
+				if(input.enableTabText){
+                    var val = input.value;
+                    var start = input.selectionStart;
+                    var end = input.selectionEnd;
+                    input.value = val.substr(0, start) + '\t' + val.substr(end, val.length);
+                    input.setSelectionRange(start + 1, start + 1);
+                    input.oninput();	// call oninput to exe ValueChange function!!
+				} else {
+				    Runtime.dynCall("vii", cb, [id, e.shiftKey ? -1 : 1]);
+				}
+            }
+		});
+	},
+	WebGLInputFocus: function(id){
+		inputField = true;
+		var input = instances[id];
+		input.focus();
+    },
+    WebGLInputOnFocus: function (id, cb) {
+        var input = instances[id];
+        input.onfocus = function () {
+            Runtime.dynCall("vi", cb, [id]);
+        };
+    },
+    WebGLInputOnBlur: function (id, cb) {
+        var input = instances[id];
+        input.onblur = function () {
+            Runtime.dynCall("vi", cb, [id]);
+        };
+    },
+	WebGLInputIsFocus: function (id) {
+		return instances[id] === document.activeElement;
+	},
+	WebGLInputOnValueChange:function(id, cb){
+        var input = instances[id];
+        input.oninput = function () {
+			var intArray = intArrayFromString(input.value);
+            var value = (allocate.length <= 2) ? allocate(intArray, ALLOC_NORMAL):allocate(intArray, 'i8', ALLOC_NORMAL);
+            Runtime.dynCall("vii", cb, [id,value]);
+        };
+    },
+	WebGLInputOnEditEnd:function(id, cb){
+        var input = instances[id];
+        input.onchange = function () {
+			var intArray = intArrayFromString(input.value);
+            var value = (allocate.length <= 2) ? allocate(intArray, ALLOC_NORMAL):allocate(intArray, 'i8', ALLOC_NORMAL);
+            Runtime.dynCall("vii", cb, [id,value]);
+        };
+    },
+	WebGLInputSelectionStart:function(id){
+        var input = instances[id];
+		return input.selectionStart;
+	},
+	WebGLInputSelectionEnd:function(id){
+        var input = instances[id];
+		return input.selectionEnd;
+	},
+	WebGLInputSelectionDirection:function(id){
+        var input = instances[id];
+		return (input.selectionDirection == "backward")?-1:1;
+	},
+	WebGLInputSetSelectionRange:function(id, start, end){
+		var input = instances[id];
+		input.setSelectionRange(start, end);
+	},
+	WebGLInputMaxLength:function(id, maxlength){
+        var input = instances[id];
+		input.maxLength = maxlength;
+	},
+	WebGLInputText:function(id, text){
+        var input = instances[id];
+		input.value = UTF8ToString(text);
+	},
+	WebGLInputDelete:function(id){
+        var input = instances[id];
+        input.parentNode.removeChild(input);
+        instances[id] = null;
+		inputField = false;
+    },
+	WebGLInputEnableTabText:function(id, enable) {
+        var input = instances[id];
+		input.enableTabText = enable;
+	},
+	WebGLInputForceBlur:function(id) {
+        var input = instances[id];
+		input.blur();
+	},
+}
+
+autoAddDeps(WebGLInput, '$instances');
+mergeInto(LibraryManager.library, WebGLInput);

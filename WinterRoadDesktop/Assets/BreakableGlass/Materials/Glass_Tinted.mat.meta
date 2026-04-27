@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2e39d8a8163aa3545a6d62bf3ea64dcf
+timeCreated: 1433538407
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Materials/Glass_Tinted.mat
+  uploadId: 170123

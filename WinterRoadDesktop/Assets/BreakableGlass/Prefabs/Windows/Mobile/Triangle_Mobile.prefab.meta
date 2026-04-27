@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9d231d078cd85fd4080ed5229c58bab6
+timeCreated: 1434570336
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Mobile/Triangle_Mobile.prefab
+  uploadId: 170123

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 573712eb296aa364fb3a7faf76616bfa
+timeCreated: 1434547390
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Hi_Poly/SphereSolid_HiPoly.prefab
+  uploadId: 170123

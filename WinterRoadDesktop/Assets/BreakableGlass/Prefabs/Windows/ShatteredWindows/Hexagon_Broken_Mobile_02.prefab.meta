@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e8ff2a85ebd3fb74581aae2aa677aa57
+timeCreated: 1434553709
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Hexagon_Broken_Mobile_02.prefab
+  uploadId: 170123

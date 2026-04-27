@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0e40c8408bf3cb444aa6f5973a36337a
+timeCreated: 1434553864
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/ShatteredWindows/Triangle_Broken_Mobile_02.prefab
+  uploadId: 170123

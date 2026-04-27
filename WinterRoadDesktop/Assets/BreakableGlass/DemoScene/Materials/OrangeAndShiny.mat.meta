@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d7553de087ee9ea47b94059de7864cb9
+timeCreated: 1434670194
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/DemoScene/Materials/OrangeAndShiny.mat
+  uploadId: 170123

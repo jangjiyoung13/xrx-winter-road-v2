@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4c342996b2c48ea418a256dc916ff102
+timeCreated: 1434547465
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Cutouts/Circle_Wall_Small.prefab
+  uploadId: 170123

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8b4bba040d21e554381bbc8cc1ad2097
+timeCreated: 1434570311
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Windows/Mobile/Aquarium_Mobile.prefab
+  uploadId: 170123

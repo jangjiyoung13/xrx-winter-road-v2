@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 93665ecae2c0d9645891bf1b4c2be388
+timeCreated: 1438719706
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 39717
+  packageName: Breakable Glass Complete Solution
+  packageVersion: 1.4
+  assetPath: Assets/BreakableGlass/Prefabs/Glassware/ShatteredGlassware/Bottle_Wine01_Broken03.prefab
+  uploadId: 170123
