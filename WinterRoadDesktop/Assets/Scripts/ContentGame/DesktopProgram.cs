@@ -62,9 +62,11 @@ public class ProgramDesktop : MonoBehaviour
     [Header("Element별 게임 중 VideoClip (6종: Joy, Sadness, Courage, Love, Hope, Friendship 순서)")]
     [SerializeField] private VideoClip[] elementGameClips = new VideoClip[6];
 
-    // === Element 비디오 순환 재생 파라미터 (값 조정은 이 상수에서만) ===
-    // 영상간 크로스 디졸브 지속 시간(초). 클립 종료 전 이 시간만큼 다음 클립과 오버랩되며 전환됩니다.
-    private const float CROSSFADE_DURATION = 0.3f;
+    // === Element 비디오 순환 재생 파라미터 ===
+    [Header("크로스 디졸브")]
+    [Tooltip("영상 간 cross-fade 지속 시간(초). 현재 클립 종료 전 이 시간만큼 다음 클립과 동시 재생되며 alpha lerp로 전환.")]
+    [Range(0.1f, 5.0f)]
+    [SerializeField] private float crossfadeDuration = 2.0f;
     // 다음 클립 Prepare 최대 대기 시간(초). 타임아웃 시에도 전환을 강행.
     private const float PREPARE_TIMEOUT = 3.0f;
     // Play() 후 첫 프레임이 실제 렌더링될 때까지 대기 최대 프레임 수 (검은 프레임이 페이드인되는 것을 방지).
@@ -2065,7 +2067,7 @@ void Start()
     
     /// <summary>
     /// element 영상을 순환하며 재생하는 코루틴 (0.2초 오버랩 크로스 디졸브).
-    /// 현재 클립이 종료되기 CROSSFADE_DURATION 초 전에 다음 클립을 Play 시작하고
+    /// 현재 클립이 종료되기 crossfadeDuration 초 전에 다음 클립을 Play 시작하고
     /// 두 영상이 동시 재생되는 동안 알파를 교차 페이드해 부드럽게 교체합니다.
     /// </summary>
     IEnumerator ElementVideoCycleCoroutine()
@@ -2134,15 +2136,13 @@ void Start()
             nextPlayer.time = 0;
             nextPlayer.Prepare();
 
-            // 하드컷 스왑 시점 = current 자연 종료 - prerollFrames
+            // 크로스 디졸브 시작 시점 = current 자연 종료 - crossfadeDuration
             VideoClip currentClip = currentPlayer.clip;
             float clipLength = (currentClip != null) ? (float)currentClip.length : 0f;
-            float frameTime = (currentClip != null && currentClip.frameRate > 0f) ? (1f / (float)currentClip.frameRate) : (1f / 60f);
-            float prerollDuration = frameTime * transitionPrerollFrames;
-            float swapAbsolute = currentPlayStartTime + Mathf.Max(clipLength - prerollDuration, 0f);
+            float fadeStartAbsolute = currentPlayStartTime + Mathf.Max(clipLength - crossfadeDuration, 0f);
 
-            // 1. swap 시점까지 current 자연 재생 (next는 백그라운드 Prepare 중)
-            while (Time.time < swapAbsolute && isGameVideoPlaying) yield return null;
+            // 1. fade 시작 시점까지 current 자연 재생 (next는 백그라운드 Prepare 중)
+            while (Time.time < fadeStartAbsolute && isGameVideoPlaying) yield return null;
             if (!isGameVideoPlaying) break;
 
             // 2. Prepare 완료 확인 (이미 iteration 시작 시점에 호출됐음, 거의 항상 완료 상태)
@@ -2160,15 +2160,34 @@ void Start()
                 nextGroup.transform.SetSiblingIndex(currentSiblingIndex + 1);
             }
 
-            // 4. 하드컷 스왑: next.Play() + alpha 즉시 교체 + current.Stop()
+            // 4. next 재생 시작 + 첫 프레임 도착 대기 (검은 프레임이 페이드인되는 것을 방지)
             nextPlayer.Play();
+            int firstFrameWait = FIRST_FRAME_WAIT_MAX_FRAMES;
+            while (nextPlayer.frame < 0 && firstFrameWait-- > 0 && isGameVideoPlaying) yield return null;
+            if (!isGameVideoPlaying) break;
+
+            float nextPlayStartTime = Time.time;
+
+            // 5. 크로스 디졸브: current는 alpha 1 고정, next만 0→1로 lerp
+            //    ※ 두 alpha를 동시에 1↔0으로 움직이면 곱셈 합성으로 인해 배경(검정)이 섞여 중간에 어두워짐
+            //      (수식: bg×(1-a1)(1-a2) + ... → t=0.5에서 bg 25% 노출).
+            //    next만 페이드하면 current가 항상 100%로 깔려있어 배경이 합성에 끼어들지 않음.
+            float fadeStart = Time.time;
+            while (isGameVideoPlaying)
+            {
+                float t = (Time.time - fadeStart) / crossfadeDuration;
+                if (t >= 1f) break;
+                if (nextGroup != null) nextGroup.alpha = t;
+                yield return null;
+            }
+            if (!isGameVideoPlaying) break;
+
+            // 6. 페이드 완료, current 정지
             if (nextGroup != null)    nextGroup.alpha    = 1f;
             if (currentGroup != null) currentGroup.alpha = 0f;
             currentPlayer.Stop();
 
-            Debug.Log($"🎬 [ElementCycle] 하드컷 전환: {elementNames[activeElementIndices[currentElementCycleIndex]]} → {nextElementName} (preroll:{transitionPrerollFrames}f)");
-
-            float nextPlayStartTime = Time.time;
+            Debug.Log($"🎬 [ElementCycle] 크로스 디졸브 전환: {elementNames[activeElementIndices[currentElementCycleIndex]]} → {nextElementName} (fade:{crossfadeDuration:F2}s)");
 
             usePlayerA = !usePlayerA;
             currentElementCycleIndex = nextCycleIdx;
