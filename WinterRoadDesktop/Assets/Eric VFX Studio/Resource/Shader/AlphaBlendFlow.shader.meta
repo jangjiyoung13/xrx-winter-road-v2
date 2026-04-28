@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 00f3c70d32d97ee47ac72d2ffef81b21
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 367614
+  packageName: Game VFX - Touch Particle Effects
+  packageVersion: 1.01
+  assetPath: Assets/Eric VFX Studio/Resource/Shader/AlphaBlendFlow.shader
+  uploadId: 883040

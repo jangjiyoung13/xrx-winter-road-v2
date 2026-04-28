@@ -44,9 +44,12 @@ if not exist "config.json" (
 )
 
 REM Check if required packages are installed
+REM 폴더 존재 여부만이 아니라 핵심 모듈(express)이 실제로 있는지 검사.
+REM (이전 버전은 node_modules 폴더만 있고 내용물이 일부 빠진 상태에서도 설치를 건너뛰어
+REM  Cannot find module 'express' 에러가 발생하는 함정이 있었음)
 echo [DEBUG] Checking for node_modules...
-if not exist "node_modules" (
-    echo [DEBUG] Installing required packages...
+if not exist "node_modules\express" (
+    echo [DEBUG] node_modules incomplete or missing - running npm install...
     npm install
     if errorlevel 1 (
         echo [ERROR] Failed to install packages!

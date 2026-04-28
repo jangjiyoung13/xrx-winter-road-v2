@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e51f9144e55b74145a00c6efbea5130a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: fx_textures_particle_materials.unity3d
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 367614
+  packageName: Game VFX - Touch Particle Effects
+  packageVersion: 1.01
+  assetPath: Assets/Eric VFX Studio/Resource/Materials/vfx_particle_02.mat
+  uploadId: 883040

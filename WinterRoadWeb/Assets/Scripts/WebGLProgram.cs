@@ -743,14 +743,29 @@ public class WebGLProgram : MonoBehaviour
                 Debug.LogWarning("⌛ reconnect 응답 없음(타임아웃) → 신규 세션으로 진입");
                 isAwaitingReconnect = false;
                 cachedPlayerId = "";
+                SendPlayerHello();
                 ShowNickNamePanelFallback();
             }
             // 응답을 받은 경우(성공/실패)는 해당 case 핸들러에서 UI 처리됨
             yield break;
         }
 
-        // 2) 첫 연결: 기존 flow
+        // 2) 첫 연결: 신규 세션 → 서버에 player 정체 알림 (TD goto_live 트리거)
+        SendPlayerHello();
         ShowNickNamePanelFallback();
+    }
+
+    /// <summary>
+    /// WebGL 신규 세션 진입을 서버에 알리는 메시지.
+    /// Desktop(Admin)/Observer/ConnectionTest는 이 메시지를 보내지 않으므로,
+    /// 서버는 playerHello 수신 시점만 TD `/goto_live` 트리거 시점으로 사용한다.
+    /// reconnect 흐름에서는 호출하지 않음 → 재접속은 트리거 대상에서 자연 제외.
+    /// </summary>
+    private void SendPlayerHello()
+    {
+        const string msg = "{\"type\":\"playerHello\",\"roomId\":\"main_room\"}";
+        SendMessage(msg);
+        Debug.Log("📤 playerHello 송신 (TD live 트리거 요청)");
     }
 
     private void ShowNickNamePanelFallback()

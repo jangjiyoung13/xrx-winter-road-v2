@@ -260,7 +260,10 @@ class GameManager {
             scoreUpdateInterval: 1000,
             botName: config.game.botName || 'WinterBot',
             botPressMin: config.game.botPressIntervalMin || 300,
-            botPressMax: config.game.botPressIntervalMax || 800
+            botPressMax: config.game.botPressIntervalMax || 800,
+            // 미디어서버 OSC 트랜지션 길이 (서버는 완료 신호를 받지 않으므로 setTimeout으로 추정)
+            transitionToLiveDurationMs: (config.osc && config.osc.transitionToLiveDurationMs) || 3000,
+            transitionToPresetDurationMs: (config.osc && config.osc.transitionToPresetDurationMs) || 3000
         };
         this.createRoom('main_room');
     }
@@ -283,7 +286,19 @@ class GameManager {
             qrCodeUrl: `${config.server.protocol}://${config.server.host}:${PORT}/unity/index.html?room=${finalRoomId}`,
             scoreChanged: false,
             lastPressInfo: null,
-            tdState: 'idle' // 'idle' | 'live' — TD OSC 트리거 중복 발사 방지
+            // ===== TD OSC 4상태 머신 =====
+            // tdState 전이도:
+            //   idle ──/goto_live──► transitioning_to_live ──(N1ms)──► live
+            //                                                           │
+            //                                                  /goto_preset
+            //                                                           ▼
+            //   idle ◄──(N2ms)── transitioning_to_preset ◄──────────────┘
+            //
+            // transition 중 반대 방향 명령은 tdPendingCommand에 큐잉(슬롯 1개, 덮어쓰기)되었다가
+            // 도달 시 자동 발사. 같은 방향 명령은 무시하여 영상 꼬임 방지.
+            tdState: 'idle', // 'idle' | 'transitioning_to_live' | 'live' | 'transitioning_to_preset'
+            tdPendingCommand: null, // null | 'live' | 'preset'
+            tdTransitionTimer: null // setTimeout 핸들 (transition 완료 대기 중일 때)
         };
         this.rooms.set(finalRoomId, room);
         console.log(`Room created: ${finalRoomId}`);
@@ -546,25 +561,103 @@ class GameManager {
         this.stopBotTimer(roomId);
     }
 
-    // ===== OSC 트리거 디바운스 (TD 상태 반영) =====
-    maybeTriggerWinterRoadStart(room) {
+    // ===== OSC 트리거 (4상태 머신 + 큐 1개) =====
+    // 정책:
+    //  - 같은 방향 명령은 무시 (이미 가는 중/도착 상태)
+    //  - 반대 방향 명령은 transition 완료까지 큐 대기
+    //  - 큐 슬롯 1개, 마지막 의도로 덮어쓰기
+    //  - 미디어서버는 완료 신호를 보내지 않으므로 setTimeout으로 도착 추정
+    maybeTriggerWinterRoadStart(room) { this._enqueueTdCommand(room, 'live'); }
+    maybeTriggerWinterRoadEnd(room)   { this._enqueueTdCommand(room, 'preset'); }
+
+    _enqueueTdCommand(room, command) {
         if (!room) return;
-        if (room.tdState === 'live') {
-            console.log(`Skip /goto_live (room already live)`);
-            return;
+        if (command !== 'live' && command !== 'preset') return;
+
+        switch (room.tdState) {
+            case 'idle':
+                if (command === 'live') {
+                    this._fireTdCommand(room, 'live');
+                } else {
+                    console.log(`Skip /goto_preset (room already idle)`);
+                }
+                return;
+
+            case 'live':
+                if (command === 'preset') {
+                    this._fireTdCommand(room, 'preset');
+                } else {
+                    console.log(`Skip /goto_live (room already live)`);
+                }
+                return;
+
+            case 'transitioning_to_live':
+                if (command === 'live') {
+                    console.log(`Skip /goto_live (already transitioning_to_live)`);
+                    // 큐에 preset이 대기 중이었다면 사용자 의도가 다시 live로 돌아왔으므로 큐 비움
+                    if (room.tdPendingCommand === 'preset') {
+                        console.log(`Clear pending 'preset' (overridden by new 'live' intent)`);
+                        room.tdPendingCommand = null;
+                    }
+                } else {
+                    // preset 큐 (덮어쓰기)
+                    if (room.tdPendingCommand !== 'preset') {
+                        console.log(`Queue 'preset' to fire after transitioning_to_live completes`);
+                    }
+                    room.tdPendingCommand = 'preset';
+                }
+                return;
+
+            case 'transitioning_to_preset':
+                if (command === 'preset') {
+                    console.log(`Skip /goto_preset (already transitioning_to_preset)`);
+                    if (room.tdPendingCommand === 'live') {
+                        console.log(`Clear pending 'live' (overridden by new 'preset' intent)`);
+                        room.tdPendingCommand = null;
+                    }
+                } else {
+                    if (room.tdPendingCommand !== 'live') {
+                        console.log(`Queue 'live' to fire after transitioning_to_preset completes`);
+                    }
+                    room.tdPendingCommand = 'live';
+                }
+                return;
         }
-        triggerWinterRoadStart();
-        room.tdState = 'live';
     }
 
-    maybeTriggerWinterRoadEnd(room) {
-        if (!room) return;
-        if (room.tdState === 'idle') {
-            console.log(`Skip /goto_preset (room already idle)`);
-            return;
+    _fireTdCommand(room, command) {
+        // 이전 transition 타이머가 살아있다면 정리 (정상 흐름에선 발생 안 함, 안전망)
+        if (room.tdTransitionTimer) {
+            clearTimeout(room.tdTransitionTimer);
+            room.tdTransitionTimer = null;
         }
-        triggerWinterRoadEnd();
-        room.tdState = 'idle';
+
+        if (command === 'live') {
+            triggerWinterRoadStart();
+            room.tdState = 'transitioning_to_live';
+            const dur = this.gameConfig.transitionToLiveDurationMs;
+            room.tdTransitionTimer = setTimeout(() => this._handleTransitionComplete(room, 'live'), dur);
+        } else {
+            triggerWinterRoadEnd();
+            room.tdState = 'transitioning_to_preset';
+            const dur = this.gameConfig.transitionToPresetDurationMs;
+            room.tdTransitionTimer = setTimeout(() => this._handleTransitionComplete(room, 'preset'), dur);
+        }
+    }
+
+    _handleTransitionComplete(room, finishedCommand) {
+        if (!room) return;
+        room.tdTransitionTimer = null;
+        room.tdState = (finishedCommand === 'live') ? 'live' : 'idle';
+        console.log(`TD transition complete → tdState='${room.tdState}'`);
+
+        // 큐에 대기 중인 명령이 있으면 발사 (현재 도달 상태와 같은 명령은 자연스럽게 skip됨)
+        const pending = room.tdPendingCommand;
+        if (pending) {
+            room.tdPendingCommand = null;
+            console.log(`Firing pending command: '${pending}'`);
+            this._enqueueTdCommand(room, pending);
+        }
     }
 
     // ===== 로비 → 게임 이동 =====
@@ -1507,6 +1600,21 @@ wss.on('connection', (ws, req) => {
                         originalTimestamp: data.timestamp
                     }));
                     break;
+
+                case 'playerHello': {
+                    // WebGL 플레이어가 페이지 로드 직후 첫 1회 송신.
+                    // Desktop(Admin)/Observer/ConnectionTest는 이 메시지를 보내지 않으므로 자연 분리됨.
+                    // reconnect 흐름은 클라이언트가 'reconnect' 메시지만 보내고 playerHello는 생략 → 자연 제외.
+                    const roomId = data.roomId || 'main_room';
+                    const room = gameManager.rooms.get(roomId);
+                    if (room) {
+                        console.log(`playerHello received → request /goto_live (room=${roomId}, tdState=${room.tdState})`);
+                        gameManager.maybeTriggerWinterRoadStart(room);
+                    } else {
+                        console.warn(`playerHello: room '${roomId}' not found`);
+                    }
+                    break;
+                }
 
                 case 'reconnect': {
                     const clientPlayerId = data.playerId;

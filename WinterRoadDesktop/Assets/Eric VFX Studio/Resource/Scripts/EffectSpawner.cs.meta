@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 853aec1586389a948b83db7eaf08c1bc
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 367614
+  packageName: Game VFX - Touch Particle Effects
+  packageVersion: 1.01
+  assetPath: Assets/Eric VFX Studio/Resource/Scripts/EffectSpawner.cs
+  uploadId: 883040

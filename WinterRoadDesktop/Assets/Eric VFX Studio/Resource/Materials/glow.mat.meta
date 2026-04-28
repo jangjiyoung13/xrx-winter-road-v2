@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: e8ebd9bb546f0bd4bac5e0ef62573c6e
+timeCreated: 1541688380
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 367614
+  packageName: Game VFX - Touch Particle Effects
+  packageVersion: 1.01
+  assetPath: Assets/Eric VFX Studio/Resource/Materials/glow.mat
+  uploadId: 883040

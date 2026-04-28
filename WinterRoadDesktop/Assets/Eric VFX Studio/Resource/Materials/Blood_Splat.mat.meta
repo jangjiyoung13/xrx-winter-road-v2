@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cec2a23f0f9b80949aa1b4d35ea3ca3a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: fx_textures_aura_materials.unity3d
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 367614
+  packageName: Game VFX - Touch Particle Effects
+  packageVersion: 1.01
+  assetPath: Assets/Eric VFX Studio/Resource/Materials/Blood_Splat.mat
+  uploadId: 883040

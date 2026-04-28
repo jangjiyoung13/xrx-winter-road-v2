@@ -182,13 +182,13 @@ public class ResultPanel : MonoBehaviour
             {
                 bool isWinner = (myRank == 1);
                 int maxCombo = (gamePanel != null) ? gamePanel.MaxCombo : 0;
-                myCardResult.SetCardData(myRank, isWinner, myData.nickname, myData.score, maxCombo);
+                myCardResult.SetCardData(myRank, isWinner, myData.nickname, myData.score, maxCombo, myData.element);
                 myCardResult.gameObject.SetActive(true);
             }
             else
             {
                 // 내 데이터를 찾지 못한 경우
-                myCardResult.SetCardData(0, false, "Unknown", 0, 0);
+                myCardResult.SetCardData(0, false, "Unknown", 0, 0, "None");
                 myCardResult.gameObject.SetActive(true);
             }
         }
@@ -221,7 +221,7 @@ public class ResultPanel : MonoBehaviour
                 if (resultText != null)
                 {
                     bool isMyResult = (rankData.playerId == myPlayerId);
-                    resultText.SetData(rank, rankData.nickname, rankData.score, isMyResult);
+                    resultText.SetData(rank, rankData.nickname, rankData.score, isMyResult, rankData.element);
                 }
                 else
                 {
@@ -543,14 +543,16 @@ public class PlayerRankData
 {
     public string playerId;
     public string nickname;
+    public string element; // 서버에서 전송: "Joy" | "Sadness" | "Courage" | "Love" | "Hope" | "Friendship" | "None"
     public int score;
     public int pressCount;
-    
+
     public PlayerRankData(string id, string name, int playerScore, int count)
     {
         playerId = id;
         nickname = name;
         score = playerScore;
         pressCount = count;
+        element = "None";
     }
 }

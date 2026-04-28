@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 33b5212ef0add2148850a921a00b8247
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 367614
+  packageName: Game VFX - Touch Particle Effects
+  packageVersion: 1.01
+  assetPath: Assets/Eric VFX Studio/Resource/Materials/glow45_Builtin.mat
+  uploadId: 883040

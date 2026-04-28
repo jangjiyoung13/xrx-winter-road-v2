@@ -46535,6 +46535,14 @@ MonoBehaviour:
   card2ndImage: {fileID: 1735694713}
   card3rdImage: {fileID: 1735694713}
   cardDefaultImage: {fileID: 1848713593}
+  elementIcon: {fileID: 1389316862}
+  elementSprites:
+  - {fileID: 21300000, guid: a5f8b04c692071f4c9c4c16c1f0a0b4e, type: 3}
+  - {fileID: 21300000, guid: 62cc3b25b02b7a64882611a2e5c02eeb, type: 3}
+  - {fileID: 21300000, guid: 50e7525ac7fc08e4586e5df813898a0c, type: 3}
+  - {fileID: 21300000, guid: 83aadf9b50a83914798f33fc0f80833f, type: 3}
+  - {fileID: 21300000, guid: 18c5fe992f2d83d46a0e21cfd1c6aa13, type: 3}
+  - {fileID: 21300000, guid: f180290e7e4dcfd48981fa05538c7bf5, type: 3}
 --- !u!1 &1658432609
 GameObject:
   m_ObjectHideFlags: 0

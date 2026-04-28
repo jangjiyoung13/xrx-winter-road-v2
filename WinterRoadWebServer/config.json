@@ -21,7 +21,9 @@
   "osc": {
     "enabled": true,
     "host": "192.168.0.13",
-    "port": 50013
+    "port": 50013,
+    "transitionToLiveDurationMs": 3000,
+    "transitionToPresetDurationMs": 3000
   },
   "ddns": {
     "enabled": false,
