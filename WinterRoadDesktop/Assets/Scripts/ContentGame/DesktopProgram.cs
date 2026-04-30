@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using WebSocketSharp;
 using System;
 using Newtonsoft.Json;
@@ -59,14 +59,15 @@ public class ProgramDesktop : MonoBehaviour
     [SerializeField] private VideoPlayer gameVideoPlayerB;
     [SerializeField] private RawImage gameImageB;
 
-    [Header("Element별 게임 중 VideoClip (6종: Joy, Sadness, Courage, Love, Hope, Friendship 순서)")]
-    [SerializeField] private VideoClip[] elementGameClips = new VideoClip[6];
+    [Header("게임 중 VideoClip (단일 통합 영상, loop 재생)")]
+    [SerializeField] private VideoClip gameVideoClip;
 
     // === Element 비디오 순환 재생 파라미터 ===
     [Header("크로스 디졸브")]
-    [Tooltip("영상 간 cross-fade 지속 시간(초). 현재 클립 종료 전 이 시간만큼 다음 클립과 동시 재생되며 alpha lerp로 전환.")]
+    [Tooltip("Element 영상 간 cross-fade 지속 시간(초). 현재 클립 종료 전 이 시간만큼 다음 클립과 동시 재생되며 alpha lerp로 전환.")]
     [Range(0.1f, 5.0f)]
     [SerializeField] private float crossfadeDuration = 2.0f;
+
     // 다음 클립 Prepare 최대 대기 시간(초). 타임아웃 시에도 전환을 강행.
     private const float PREPARE_TIMEOUT = 3.0f;
     // Play() 후 첫 프레임이 실제 렌더링될 때까지 대기 최대 프레임 수 (검은 프레임이 페이드인되는 것을 방지).
@@ -96,16 +97,14 @@ public class ProgramDesktop : MonoBehaviour
     private Coroutine resetFadeCoroutine = null;
     private Coroutine endFadeCoroutine = null;
 
-    // 게임 중 순환 재생 상태
-    private List<int> activeElementIndices = new List<int>(); // 현재 게임의 활성 element 인덱스들
-    private int currentElementCycleIndex = 0; // 순환 인덱스
-    private Coroutine elementCycleCoroutine = null;
+    // 게임 중 영상 재생 상태
+    private Coroutine gameVideoCoroutine = null;
     private bool isGameVideoPlaying = false;
-    
-    // 듀얼 VideoPlayer 크로스 디졸브 상태
+
+    // VideoPlayer / Idle CanvasGroup (idle → 게임 영상 크로스 디졸브용)
     private CanvasGroup gameCanvasGroupA;
     private CanvasGroup gameCanvasGroupB;
-    private bool usePlayerA = true; // 현재 활성 플레이어 (A/B 토글)
+    private CanvasGroup idleCanvasGroup;
     
     // Element 이름 → 인덱스 매핑
     private readonly string[] elementNames = { "Joy", "Sadness", "Courage", "Love", "Hope", "Friendship" };
@@ -139,20 +138,25 @@ public class ProgramDesktop : MonoBehaviour
     // private int lastRedTeamScore = 0;
     // private int lastBlueTeamScore = 0;
     
+    // 한 프레임에 처리할 최대 메시지 수.
+    // ※ 롤백 방법: 이 값을 1로 바꾸면 변경 전 동작(한 프레임 1개 처리)과 완전히 동일.
+    // 8: press burst 시 메시지 backlog 누적으로 인한 frame drop 지속 방지. 1단계(fast path)와 시너지.
+    private const int MAX_MESSAGES_PER_FRAME = 8;
+
     void Update()
     {
-        // 메인 스레드에서 펜딩 메시지 처리
-        string messageToProcess = null;
-        lock (messageLock)
+        // 메인 스레드에서 펜딩 메시지 처리 (한 프레임 최대 MAX_MESSAGES_PER_FRAME개)
+        for (int i = 0; i < MAX_MESSAGES_PER_FRAME; i++)
         {
-            if (pendingMessages.Count > 0)
+            string messageToProcess = null;
+            lock (messageLock)
             {
+                if (pendingMessages.Count == 0) break;
                 messageToProcess = pendingMessages.Dequeue();
             }
-        }
-        
-        if (!string.IsNullOrEmpty(messageToProcess))
-        {
+
+            if (string.IsNullOrEmpty(messageToProcess)) continue;
+
             try
             {
                 ProcessObserverMessage(messageToProcess);
@@ -168,6 +172,11 @@ public class ProgramDesktop : MonoBehaviour
 
 void Start()
     {
+        // 프레임레이트 60fps 고정 (LED 출력 동기화 + 비디오/파티클 부하 안정화)
+        // ※ vSyncCount=0이어야 targetFrameRate가 적용됨. vSync가 켜져 있으면 모니터 주사율을 따름.
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 60;
+
         // 커맨드라인에서 서버 URL 읽기 (런처에서 --server-url 인자로 전달)
         string[] args = System.Environment.GetCommandLineArgs();
         for (int i = 0; i < args.Length; i++)
@@ -175,13 +184,13 @@ void Start()
             if (args[i] == "--server-url" && i + 1 < args.Length)
             {
                 serverUrl = args[i + 1];
-                Debug.Log($"🔗 커맨드라인에서 서버 URL 설정: {serverUrl}");
+                // Debug.Log($"🔗 커맨드라인에서 서버 URL 설정: {serverUrl}");
                 break;
             }
         }
 
-        Debug.Log($"🎮 Winter Road Desktop - WebSocket 연결 테스트 시작");
-        Debug.Log($"🔗 대상 서버: {serverUrl}");
+        // Debug.Log($"🎮 Winter Road Desktop - WebSocket 연결 테스트 시작");
+        // Debug.Log($"🔗 대상 서버: {serverUrl}");
 
         // 2초 후 자동 연결 시도
         Invoke("StartConnectionTest", 2f);
@@ -207,38 +216,38 @@ void Start()
                 if (int.TryParse(args[i + 1], out int monitorIdx))
                 {
                     displayIndex = monitorIdx;
-                    Debug.Log($"🖥 커맨드라인에서 모니터 인덱스 설정: {displayIndex}");
+                    // Debug.Log($"🖥 커맨드라인에서 모니터 인덱스 설정: {displayIndex}");
                 }
                 break;
             }
         }
-        
+
         // 사용 가능한 디스플레이 목록 가져오기
         var displayList = Screen.mainWindowDisplayInfo;
         var allDisplays = new List<DisplayInfo>();
         Screen.GetDisplayLayout(allDisplays);
-        
-        Debug.Log($"🖥 감지된 모니터 수: {allDisplays.Count}");
+
+        // Debug.Log($"🖥 감지된 모니터 수: {allDisplays.Count}");
         for (int i = 0; i < allDisplays.Count; i++)
         {
-            Debug.Log($"  모니터 {i}: {allDisplays[i].width}x{allDisplays[i].height} name={allDisplays[i].name}");
+            // Debug.Log($"  모니터 {i}: {allDisplays[i].width}x{allDisplays[i].height} name={allDisplays[i].name}");
         }
-        
+
         // 유효 범위 확인
         if (displayIndex < 0 || displayIndex >= allDisplays.Count)
         {
             Debug.LogWarning($"⚠️ 모니터 인덱스 {displayIndex}이 범위를 벗어남 (총 {allDisplays.Count}개). 0번 모니터 사용.");
             displayIndex = 0;
         }
-        
+
         // 대상 모니터로 창 이동 후 전체화면
         var targetDisplay = allDisplays[displayIndex];
-        Debug.Log($"🖥 대상 모니터: {displayIndex} ({targetDisplay.width}x{targetDisplay.height})");
-        
+        // Debug.Log($"🖥 대상 모니터: {displayIndex} ({targetDisplay.width}x{targetDisplay.height})");
+
         // 먼저 창을 대상 모니터로 이동
         var moveResult = Screen.MoveMainWindowTo(targetDisplay, new Vector2Int(0, 0));
-        Debug.Log($"🖥 창 이동 결과: {moveResult}");
-        
+        // Debug.Log($"🖥 창 이동 결과: {moveResult}");
+
         // 해당 모니터에서 전체화면으로 전환
         Screen.SetResolution((int)targetDisplay.width, (int)targetDisplay.height, FullScreenMode.FullScreenWindow);
         //_startButton.onClick.AddListener(StartGame);
@@ -271,17 +280,17 @@ void Start()
                 }
                 
                 resultPanelCanvasGroups[i] = canvasGroup;
-                Debug.Log($"✅ CanvasGroup 캐싱: {resultGroupObjects[i].gameObject.name}");
+                // Debug.Log($"✅ CanvasGroup 캐싱: {resultGroupObjects[i].gameObject.name}");
             }
         }
         
-        Debug.Log($"✅ 총 {resultPanelCanvasGroups.Length}개의 CanvasGroup 캐싱 완료");
+        // Debug.Log($"✅ 총 {resultPanelCanvasGroups.Length}개의 CanvasGroup 캐싱 완료");
     }
     === CacheResultPanelCanvasGroups 주석 처리 끝 === */
 
     void StartConnectionTest()
     {
-        Debug.Log("🔄 외부 서버 연결 테스트 시작...");
+        // Debug.Log("🔄 외부 서버 연결 테스트 시작...");
         ConnectToServer();
     }
     
@@ -289,13 +298,13 @@ void Start()
     {
         if (isConnected)
         {
-            Debug.Log("⚠️ 이미 서버에 연결되어 있습니다.");
+            // Debug.Log("⚠️ 이미 서버에 연결되어 있습니다.");
             return;
         }
         
         try
         {
-            Debug.Log($"🔄 서버 연결 시도: {serverUrl}");
+            // Debug.Log($"🔄 서버 연결 시도: {serverUrl}");
             
             ws = new WebSocket(serverUrl);
             
@@ -303,28 +312,28 @@ void Start()
                 isConnected = true;
                 reconnectDelay = INITIAL_RECONNECT_DELAY;
                 isReconnecting = false;
-                Debug.Log("✅ WebSocket 연결 성공!");
-                Debug.Log("🎯 외부 서버와의 통신이 정상적으로 작동합니다.");
+                // Debug.Log("✅ WebSocket 연결 성공!");
+                // Debug.Log("🎯 외부 서버와의 통신이 정상적으로 작동합니다.");
                 
                 // 간단한 테스트 메시지 전송
                 TestBasicConnection();
             };
             
             ws.OnMessage += (sender, e) => {
-                Debug.Log($"📨 서버 응답 수신: {e.Data}");
-                Debug.Log($"📊 메시지 길이: {e.Data.Length}자");
+                // Debug.Log($"📨 서버 응답 수신: {e.Data}");
+                // Debug.Log($"📊 메시지 길이: {e.Data.Length}자");
                 
                 // 메시지를 큐에 추가하여 메인 스레드에서 처리
                 lock (messageLock)
                 {
                     pendingMessages.Enqueue(e.Data);
-                    Debug.Log($"📨 메시지 큐에 추가됨. 큐 크기: {pendingMessages.Count}");
+                    // Debug.Log($"📨 메시지 큐에 추가됨. 큐 크기: {pendingMessages.Count}");
                 }
             };
             
             ws.OnClose += (sender, e) => {
                 isConnected = false;
-                Debug.Log($"🔌 연결 종료됨. 코드: {e.Code}, 이유: {e.Reason}");
+                // Debug.Log($"🔌 연결 종료됨. 코드: {e.Code}, 이유: {e.Reason}");
                 // 정상 종료(1000)가 아닌 경우 재연결 시도
                 if (e.Code != (ushort)CloseStatusCode.Normal)
                 {
@@ -340,7 +349,7 @@ void Start()
                 }
             };
             
-            ws.Connect();
+            ws.ConnectAsync();
         }
         catch (Exception ex)
         {
@@ -357,7 +366,7 @@ void Start()
         if (!isReconnecting && this != null && gameObject.activeInHierarchy)
         {
             isReconnecting = true;
-            Debug.Log("🔄 WebSocket 재연결 시작...");
+            // Debug.Log("🔄 WebSocket 재연결 시작...");
             reconnectCoroutine = StartCoroutine(ReconnectWithBackoff());
         }
     }
@@ -373,13 +382,13 @@ void Start()
         while (!isConnected && this != null)
         {
             attempt++;
-            Debug.Log($"🔄 [{attempt}회] {reconnectDelay:F1}초 후 재연결 시도...");
+            // Debug.Log($"🔄 [{attempt}회] {reconnectDelay:F1}초 후 재연결 시도...");
             
             yield return new WaitForSeconds(reconnectDelay);
             
             if (isConnected)
             {
-                Debug.Log("✅ 대기 중 연결 복구됨 - 재연결 중단");
+                // Debug.Log("✅ 대기 중 연결 복구됨 - 재연결 중단");
                 break;
             }
             
@@ -390,7 +399,7 @@ void Start()
                 ws = null;
             }
             
-            Debug.Log($"🔄 [{attempt}회] 재연결 시도 중... ({serverUrl})");
+            // Debug.Log($"🔄 [{attempt}회] 재연결 시도 중... ({serverUrl})");
             
             // ConnectToServer 내부에서 isConnected 체크를 하므로 직접 연결
             try
@@ -401,7 +410,7 @@ void Start()
                     isConnected = true;
                     reconnectDelay = INITIAL_RECONNECT_DELAY;
                     isReconnecting = false;
-                    Debug.Log($"✅ [{attempt}회] 재연결 성공!");
+                    // Debug.Log($"✅ [{attempt}회] 재연결 성공!");
                     
                     // 재연결 후 서버에 다시 등록
                     TestBasicConnection();
@@ -416,7 +425,7 @@ void Start()
                 
                 ws.OnClose += (sender, e) => {
                     isConnected = false;
-                    Debug.Log($"🔌 재연결 후 종료됨. 코드: {e.Code}, 이유: {e.Reason}");
+                    // Debug.Log($"🔌 재연결 후 종료됨. 코드: {e.Code}, 이유: {e.Reason}");
                     if (e.Code != (ushort)CloseStatusCode.Normal)
                     {
                         TriggerReconnect();
@@ -427,7 +436,7 @@ void Start()
                     Debug.LogError($"❌ 재연결 오류: {e.Message}");
                 };
                 
-                ws.Connect();
+                ws.ConnectAsync();
             }
             catch (Exception ex)
             {
@@ -444,7 +453,7 @@ void Start()
             
             if (isConnected)
             {
-                Debug.Log($"✅ [{attempt}회] 재연결 완료! (백오프 리셋)");
+                // Debug.Log($"✅ [{attempt}회] 재연결 완료! (백오프 리셋)");
                 reconnectDelay = INITIAL_RECONNECT_DELAY;
                 isReconnecting = false;
                 reconnectCoroutine = null;
@@ -453,7 +462,7 @@ void Start()
             
             // 백오프 증가
             reconnectDelay = Mathf.Min(reconnectDelay * 2f, MAX_RECONNECT_DELAY);
-            Debug.Log($"⏳ 다음 재연결 대기: {reconnectDelay:F1}초");
+            // Debug.Log($"⏳ 다음 재연결 대기: {reconnectDelay:F1}초");
         }
         
         isReconnecting = false;
@@ -462,13 +471,13 @@ void Start()
     
     void TestBasicConnection()
     {
-        Debug.Log($"🔍 연결 상태 확인 - ws: {ws != null}, isConnected: {isConnected}");
+        // Debug.Log($"🔍 연결 상태 확인 - ws: {ws != null}, isConnected: {isConnected}");
 
         try
         {
             if (ws != null && isConnected)
             {
-                Debug.Log($"📤 기본 연결 테스트 시작... (연결 상태: {ws.ReadyState})");
+                // Debug.Log($"📤 기본 연결 테스트 시작... (연결 상태: {ws.ReadyState})");
 
                 // 간단한 핑 테스트 (JSON 형식으로)
                 var pingMessage = new {
@@ -477,7 +486,7 @@ void Start()
                 };
                 string pingJson = JsonConvert.SerializeObject(pingMessage);
                 ws.Send(pingJson);
-                Debug.Log("📤 핑 메시지 전송 완료!");
+                // Debug.Log("📤 핑 메시지 전송 완료!");
 
                 // 이전 세션이 있으면 reconnect 먼저 시도, 실패 시 joinRoom fallback
                 if (!string.IsNullOrEmpty(cachedPlayerId))
@@ -489,7 +498,7 @@ void Start()
                     string reconnectJson = JsonConvert.SerializeObject(reconnectMsg);
                     ws.Send(reconnectJson);
                     isAwaitingReconnect = true;
-                    Debug.Log($"📤 reconnect 요청 전송: {cachedPlayerId}");
+                    // Debug.Log($"📤 reconnect 요청 전송: {cachedPlayerId}");
                     StartCoroutine(ReconnectTimeoutFallback());
                 }
                 else
@@ -513,7 +522,7 @@ void Start()
             playerName = "DesktopAdmin"
         };
         string joinJson = JsonConvert.SerializeObject(joinMessage);
-        Debug.Log($"📤 방 참가 요청 전송: {joinJson}");
+        // Debug.Log($"📤 방 참가 요청 전송: {joinJson}");
         ws.Send(joinJson);
     }
 
@@ -533,13 +542,27 @@ void Start()
     {
         try
         {
+            // === Fast path: 가장 빈번한 playerPressImmediate 메시지는 JObject 파싱을 우회.
+            // 핫 경로의 GC 압박이 누적되면 frame hitch가 길어지는 것을 방지.
+            // 메시지에 "type":"playerPressImmediate"가 포함되면 element 필드만 빠르게 추출.
+            // 형식이 다르면 일반 경로(JObject.Parse)로 자연스럽게 폴백. ===
+            if (messageJson.IndexOf("\"type\":\"playerPressImmediate\"", StringComparison.Ordinal) >= 0)
+            {
+                if (TryFastParsePressElement(messageJson, out string fastElement))
+                {
+                    PlayElementParticle(fastElement ?? "None");
+                    return;
+                }
+                // 추출 실패 시 아래 일반 경로로 폴백
+            }
+
             var message = JObject.Parse(messageJson);
             string messageType = message["type"]?.ToString() ?? "";
             
             switch (messageType)
             {
                 case "joinedRoom":
-                    Debug.Log($"✅ {(isAdminMode ? "관리자" : "Observer")}로 방 입장 성공!");
+                    // Debug.Log($"✅ {(isAdminMode ? "관리자" : "Observer")}로 방 입장 성공!");
                     
                     var data = message["data"];
                     var playerInfo = data?["player"];
@@ -550,14 +573,14 @@ void Start()
                     if (!string.IsNullOrEmpty(playerId))
                     {
                         cachedPlayerId = playerId;
-                        Debug.Log($"🔑 cachedPlayerId 저장: {cachedPlayerId}");
+                        // Debug.Log($"🔑 cachedPlayerId 저장: {cachedPlayerId}");
                     }
 
                     if (playerInfo != null)
                     {
                         string playerName = playerInfo["name"]?.ToString() ?? (isAdminMode ? "AdminDesktop" : "Observer");
                         bool hasAdminPermission = playerInfo["isAdmin"]?.Value<bool>() ?? false;
-                        Debug.Log($"👤 자신의 플레이어 정보 - ID: {playerId}, Name: {playerName}, Admin: {hasAdminPermission}");
+                        // Debug.Log($"👤 자신의 플레이어 정보 - ID: {playerId}, Name: {playerName}, Admin: {hasAdminPermission}");
                     }
                     
                     // 관리자 권한 확인 및 게임 상태 업데이트
@@ -567,49 +590,40 @@ void Start()
                         
                         if (hasAdminPermission)
                         {
-                            Debug.Log("👑 관리자 권한 확인됨 - 게임 제어 가능");
+                            // Debug.Log("👑 관리자 권한 확인됨 - 게임 제어 가능");
                             canStartGame = true;
                         }
                         
                         gameStatus = roomInfo?["status"]?.ToString() ?? "waiting";
-                        Debug.Log($"🎮 현재 게임 상태: {gameStatus}");
+                        // Debug.Log($"🎮 현재 게임 상태: {gameStatus}");
                     }
                     break;
                 case "gameStateUpdate":
-                    Debug.Log("📊 상세 게임 상태 업데이트 수신");
+                    // Debug.Log("📊 상세 게임 상태 업데이트 수신");
                     ParseGameStateUpdate(message);
                     break;
                 case "playerPressImmediate":
                     // 🎆 실시간 Press 알림 수신 (ShockWave 파티클용)
-                    Debug.Log("🎆 [IMMEDIATE PRESS] 실시간 Press 알림 수신!");
+                    // Debug.Log("🎆 [IMMEDIATE PRESS] 실시간 Press 알림 수신!");
                     HandleImmediatePress(message);
                     break;
                 case "scoreUpdate":
-                    Debug.Log("🏆 점수 업데이트 수신");
+                    // Debug.Log("🏆 점수 업데이트 수신");
                     // Desktop(LED)에서는 점수 UI 불필요 - 로그만 출력
                     break;
                 case "timeUpdate":
                     ParseTimeUpdate(message);
                     break;
                 case "gameStart":
-                    Debug.Log("🚀 게임 시작!");
+                    // Debug.Log("🚀 게임 시작!");
                     PlayFxStartTransition();
                     gameStatus = "playing";
                     canStartGame = false;
-                    // 플레이어 element 수집 및 순환 영상 시작
-                    CollectPlayerElements(message);
-                    if (activeElementIndices.Count > 0)
-                    {
-                        StartElementCycleVideo();
-                        Debug.Log($"🎥 [게임 시작] {activeElementIndices.Count}개 element 영상 순환 재생 시작!");
-                    }
-                    else
-                    {
-                        Debug.Log("🎥 [게임 시작] 유효한 element 없음 - idle 비디오 계속 재생");
-                    }
+                    // 통합 게임 영상 재생 시작 (단일 클립 loop)
+                    StartGameVideo();
                     break;
                 case "gameEnd":
-                    Debug.Log("🏁🏁🏁 [gameEnd] 게임 종료!");
+                    // Debug.Log("🏁🏁🏁 [gameEnd] 게임 종료!");
                     // PlayFxFinishTransition();
                     gameStatus = "finished";
                     canStartGame = false;
@@ -618,26 +632,26 @@ void Start()
                     // (PlayElementEndVideo 내부에서 Prepare 완료 후 페이드 → 페이드 끝난 뒤 정지)
 
                     // 파티클 풀 초기화
-                    Debug.Log("🎥 [gameEnd] 파티클 풀 초기화...");
+                    // Debug.Log("🎥 [gameEnd] 파티클 풀 초기화...");
                     ResetElementParticlePool();
                     
                     // 우승자 element에 맞는 종료 영상 재생
                     string winnerElement = GetWinnerElement(message);
                     if (!string.IsNullOrEmpty(winnerElement) && winnerElement != "None")
                     {
-                        Debug.Log($"🎥 [gameEnd] 우승자 element: {winnerElement} → 종료 영상 재생!");
+                        // Debug.Log($"🎥 [gameEnd] 우승자 element: {winnerElement} → 종료 영상 재생!");
                         PlayElementEndVideo(winnerElement);
                     }
                     else
                     {
                         // 우승자가 없는 경우 첫 번째 종료 비디오를 기본 재생
-                        Debug.Log("🎥 [gameEnd] 우승자 element 없음 - 첫 번째 종료 비디오 기본 재생");
+                        // Debug.Log("🎥 [gameEnd] 우승자 element 없음 - 첫 번째 종료 비디오 기본 재생");
                         PlayElementEndVideo(elementNames[0]);
                     }
-                    Debug.Log("🏁🏁🏁 [gameEnd] 게임 종료 처리 완료");
+                    // Debug.Log("🏁🏁🏁 [gameEnd] 게임 종료 처리 완료");
                     break;
                 case "gameReset":
-                    Debug.Log("🔄 게임 리셋됨");
+                    // Debug.Log("🔄 게임 리셋됨");
                     StopAllFxTransition();
                     gameStatus = "waiting";
                     canStartGame = isAdminMode;
@@ -653,37 +667,37 @@ void Start()
                     
                     // 종료 영상 → idle 크로스페이드 전환
                     StartResetFadeTransition();
-                    Debug.Log("🎥 [gameReset] End → Idle 크로스페이드 시작");
+                    // Debug.Log("🎥 [gameReset] End → Idle 크로스페이드 시작");
 
                     break;
                 case "playerJoined":
-                    Debug.Log("👤 새 플레이어 입장");
+                    // Debug.Log("👤 새 플레이어 입장");
                     HandlePlayerJoined(message);
                     break;
                 case "playerLeft":
-                    Debug.Log("👋 플레이어 퇴장");
+                    // Debug.Log("👋 플레이어 퇴장");
                     HandlePlayerLeft(message);
                     break;
                 case "switchToGameVideo":
-                    Debug.Log("🎬 [switchToGameVideo] 메시지 수신! (풀영상 시스템 - 비디오 전환 없음)");
+                    // Debug.Log("🎬 [switchToGameVideo] 메시지 수신! (풀영상 시스템 - 비디오 전환 없음)");
                     // 풀영상이 계속 재생 중이므로 별도 처리 불필요
                     break;
                 case "countdownStart":
-                    Debug.Log("⏰ 게임 시작 카운트다운 시작! (풀영상 시스템 - 카운트다운 없음)");
+                    // Debug.Log("⏰ 게임 시작 카운트다운 시작! (풀영상 시스템 - 카운트다운 없음)");
                     // 카운트다운 없이 바로 게임 시작
                     break;
                 case "countdownUpdate":
                     // 카운트다운이 없으므로 무시
-                    Debug.Log("⏰ 카운트다운 업데이트 (풀영상 시스템 - 무시)");
+                    // Debug.Log("⏰ 카운트다운 업데이트 (풀영상 시스템 - 무시)");
                     break;
                 case "lobbyTimerUpdate":
                     // 로비 카운트다운 업데이트 (매초 수신)
                     var lobbyCountdown = message["data"]?["countdown"]?.Value<int>() ?? 0;
                     var lobbyPlayerCount = message["data"]?["playerCount"]?.Value<int>() ?? 0;
-                    Debug.Log($"⏰ 로비 타이머: {lobbyCountdown}초 남음 (플레이어: {lobbyPlayerCount}명)");
+                    // Debug.Log($"⏰ 로비 타이머: {lobbyCountdown}초 남음 (플레이어: {lobbyPlayerCount}명)");
                     break;
                 case "autoReset":
-                    Debug.Log("🔄 게임이 자동으로 대기 상태로 리셋되었습니다!");
+                    // Debug.Log("🔄 게임이 자동으로 대기 상태로 리셋되었습니다!");
                     HandleAutoReset(message);
                     
                     // 결과창 닫기 (개인전 전환으로 주석 처리)
@@ -695,25 +709,25 @@ void Start()
                     // 종료 영상 정지 → idle 복귀
                     StopEndVideo();
                     PlayIdleVideo();
-                    Debug.Log("🎥 [autoReset] 게임/종료 영상 정지, idle 재생 복귀");
+                    // Debug.Log("🎥 [autoReset] 게임/종료 영상 정지, idle 재생 복귀");
                     break;
                 case "lobbyTimerStarted":
-                    Debug.Log("🏠 대기방 타이머 시작! 첫 유저 입장");
+                    // Debug.Log("🏠 대기방 타이머 시작! 첫 유저 입장");
                     // idle 비디오는 이미 재생 중
-                    Debug.Log("🎥 [lobbyTimerStarted] idle 비디오 계속 재생 중");
+                    // Debug.Log("🎥 [lobbyTimerStarted] idle 비디오 계속 재생 중");
                     break;
                 case "movedToGameRoom":
-                    Debug.Log("🎬 [movedToGameRoom] 게임방 이동! (풀영상 시스템 - 비디오 전환 없음)");
+                    // Debug.Log("🎬 [movedToGameRoom] 게임방 이동! (풀영상 시스템 - 비디오 전환 없음)");
                     // 결과창 닫기 (개인전 전환으로 주석 처리)
                     // HideResultPanels();
                     // 풀영상이 계속 재생 중이므로 별도 처리 불필요
                     break;
                 case "pauseIntroVideo":
-                    Debug.Log("⏸️ 인트로 비디오 일시정지 명령 수신 (풀영상 시스템 - 무시)");
+                    // Debug.Log("⏸️ 인트로 비디오 일시정지 명령 수신 (풀영상 시스템 - 무시)");
                     // 풀영상 시스템에서는 일시정지 없음
                     break;
                 case "videoReset":
-                    Debug.Log("🔄🎬 [videoReset] 종료 영상 정지 명령 수신! (게임 종료 후 10초)");
+                    // Debug.Log("🔄🎬 [videoReset] 종료 영상 정지 명령 수신! (게임 종료 후 10초)");
                     // 게임 중 순환 영상 정지
                     StopGameVideo();
                     // 종료 영상 정지
@@ -727,12 +741,12 @@ void Start()
                     canStartGame = isAdminMode;
                     // idle 복귀
                     PlayIdleVideo();
-                    Debug.Log("🏠 [videoReset] 대기 상태로 전환 완료 - idle 재생 복귀");
+                    // Debug.Log("🏠 [videoReset] 대기 상태로 전환 완료 - idle 재생 복귀");
                     break;
                 case "pong":
-                    Debug.Log("🏓 Pong 응답 수신 - 연결 정상!");
+                    // Debug.Log("🏓 Pong 응답 수신 - 연결 정상!");
                     var pongTime = message["timestamp"]?.ToString();
-                    Debug.Log($"🏓 Pong 타임스탬프: {pongTime}");
+                    // Debug.Log($"🏓 Pong 타임스탬프: {pongTime}");
                     break;
                 case "reconnected":
                 {
@@ -744,7 +758,7 @@ void Start()
                     bool isAdmin = rcData?["isAdmin"]?.Value<bool>() ?? false;
                     canStartGame = isAdminMode && isAdmin;
 
-                    Debug.Log($"✅ 재연결 성공 — playerId={cachedPlayerId}, isAdmin={isAdmin}");
+                    // Debug.Log($"✅ 재연결 성공 — playerId={cachedPlayerId}, isAdmin={isAdmin}");
                     break;
                 }
                 case "reconnectFailed":
@@ -764,10 +778,10 @@ void Start()
                     break;
                 case "playerDisconnected":
                 case "playerReconnected":
-                    Debug.Log($"ℹ️ {messageType}: {message["data"]?["playerName"]}");
+                    // Debug.Log($"ℹ️ {messageType}: {message["data"]?["playerName"]}");
                     break;
                 default:
-                    Debug.Log($"❓ 알 수 없는 메시지 타입: {messageType}");
+                    // Debug.Log($"❓ 알 수 없는 메시지 타입: {messageType}");
                     break;
             }
         }
@@ -790,22 +804,22 @@ void Start()
             switch (status)
             {
                 case "waiting":
-                    Debug.Log("🏠 방 상태: 대기 중");
+                    // Debug.Log("🏠 방 상태: 대기 중");
                     break;
                 case "lobby":
-                    Debug.Log("🏠 방 상태: 로비");
+                    // Debug.Log("🏠 방 상태: 로비");
                     break;
                 case "countdown":
-                    Debug.Log("⏰ 방 상태: 카운트다운");
+                    // Debug.Log("⏰ 방 상태: 카운트다운");
                     break;
                 case "playing":
-                    Debug.Log("🎮 방 상태: 게임 진행 중");
+                    // Debug.Log("🎮 방 상태: 게임 진행 중");
                     break;
                 case "finished":
-                    Debug.Log("🏆 방 상태: 게임 종료");
+                    // Debug.Log("🏆 방 상태: 게임 종료");
                     break;
                 default:
-                    Debug.Log($"❓ 알 수 없는 방 상태: {status}");
+                    // Debug.Log($"❓ 알 수 없는 방 상태: {status}");
                     break;
             }
             
@@ -829,7 +843,7 @@ void Start()
             if (playerCount != null)
             {
                 int count = playerCount.Value<int>();
-                Debug.Log($"👥 플레이어 현황 - 활성: {count}명");
+                // Debug.Log($"👥 플레이어 현황 - 활성: {count}명");
             }
         }
         catch (Exception ex)
@@ -846,7 +860,7 @@ void Start()
             
             int minutes = remainingTime / 60;
             int seconds = remainingTime % 60;
-            Debug.Log($"⏰ 남은 시간: {minutes:00}:{seconds:00}");
+            // Debug.Log($"⏰ 남은 시간: {minutes:00}:{seconds:00}");
         }
         catch (Exception ex)
         {
@@ -865,7 +879,7 @@ void Start()
                 string playerId = data["playerId"]?.ToString() ?? "";
                 string playerName = data["playerName"]?.ToString() ?? "Unknown";
                 
-                Debug.Log($"👤 플레이어 입장 상세 - ID: {playerId}, 이름: {playerName} (개인전)");;
+                // Debug.Log($"👤 플레이어 입장 상세 - ID: {playerId}, 이름: {playerName} (개인전)");;
                 
                 // 플레이어 UI 생성
             }
@@ -887,7 +901,7 @@ void Start()
                 string playerId = data["playerId"]?.ToString() ?? "";
                 string playerName = data["playerName"]?.ToString() ?? "Unknown";
                 
-                Debug.Log($"👋 플레이어 퇴장 상세 - ID: {playerId}, 이름: {playerName} (개인전)");
+                // Debug.Log($"👋 플레이어 퇴장 상세 - ID: {playerId}, 이름: {playerName} (개인전)");
                 
                 // 플레이어 UI 제거
             }
@@ -909,7 +923,7 @@ void Start()
         
         if (ws != null && isConnected && (gameStatus == "waiting" || gameStatus == "lobby"))
         {
-            Debug.Log($"🚀 서버로 게임 시작 명령 전송! (현재 상태: {gameStatus})");
+            // Debug.Log($"🚀 서버로 게임 시작 명령 전송! (현재 상태: {gameStatus})");
             
             // 바로 서버에 게임 시작 메시지 전송 (클라이언트 카운트다운 제거)
             var startMessage = new {
@@ -917,7 +931,7 @@ void Start()
             };
             string json = JsonConvert.SerializeObject(startMessage);
             ws.Send(json);
-            Debug.Log("🚀 게임 시작 명령 전송 완료!");
+            // Debug.Log("🚀 게임 시작 명령 전송 완료!");
             
             // 게임 상태를 대기중으로 설정 (서버에서 카운트다운 및 시작 처리)
             canStartGame = false;
@@ -944,7 +958,7 @@ void Start()
             
             string json = JsonConvert.SerializeObject(resetMessage);
             ws.Send(json);
-            Debug.Log("🔄 게임 리셋 명령 전송!");
+            // Debug.Log("🔄 게임 리셋 명령 전송!");
         }
         else
         {
@@ -956,7 +970,7 @@ void Start()
     {
         if (ws != null && isConnected)
         {
-            Debug.Log("🔄 Observer 테스트 완료 - 연결 종료");
+            // Debug.Log("🔄 Observer 테스트 완료 - 연결 종료");
             ws.Close();
         }
     }
@@ -965,7 +979,7 @@ void Start()
     {
         try
         {
-            Debug.Log("🔄 게임이 자동으로 대기 상태로 리셋되었습니다!");
+            // Debug.Log("🔄 게임이 자동으로 대기 상태로 리셋되었습니다!");
             
             // 게임 상태 초기화 (서버는 lobby 상태로 전환)
             gameStatus = "lobby";
@@ -1001,12 +1015,12 @@ void Start()
         if (normalizedTeam.Equals("Red", StringComparison.OrdinalIgnoreCase))
         {
             redTeamHitCount++;
-            Debug.Log($"🔴 [RED TEAM] 히트 누적: {redTeamHitCount}회");
+            // Debug.Log($"🔴 [RED TEAM] 히트 누적: {redTeamHitCount}회");
         }
         else if (normalizedTeam.Equals("Blue", StringComparison.OrdinalIgnoreCase))
         {
             blueTeamHitCount++;
-            Debug.Log($"🔵 [BLUE TEAM] 히트 누적: {blueTeamHitCount}회");
+            // Debug.Log($"🔵 [BLUE TEAM] 히트 누적: {blueTeamHitCount}회");
         }
         else
         {
@@ -1018,7 +1032,7 @@ void Start()
         if (particleBurstCoroutine == null)
         {
             particleBurstCoroutine = StartCoroutine(ParticleBurstCycle());
-            Debug.Log("🎆 [PARTICLE CYCLE] 파티클 분산 재생 사이클 시작!");
+            // Debug.Log("🎆 [PARTICLE CYCLE] 파티클 분산 재생 사이클 시작!");
         }
     }
     
@@ -1040,12 +1054,12 @@ void Start()
             redTeamHitCount = 0;
             blueTeamHitCount = 0;
             
-            Debug.Log($"🎆 [PARTICLE BURST] 1초 주기 도달 - Red: {redHits}회, Blue: {blueHits}회");
+            // Debug.Log($"🎆 [PARTICLE BURST] 1초 주기 도달 - Red: {redHits}회, Blue: {blueHits}회");
             
             // 히트가 없으면 코루틴 종료
             if (redHits == 0 && blueHits == 0)
             {
-                Debug.Log("🎆 [PARTICLE BURST] 히트가 없어 사이클 종료");
+                // Debug.Log("🎆 [PARTICLE BURST] 히트가 없어 사이클 종료");
                 particleBurstCoroutine = null;
                 yield break;
             }
@@ -1099,14 +1113,14 @@ void Start()
             // 파티클 시스템 설정 확인 (디버깅용)
             var main = particle.main;
             var emission = particle.emission;
-            Debug.Log($"🔍 [{teamLabel}] 파티클 설정 - MaxParticles: {main.maxParticles}, PlayOnAwake: {main.playOnAwake}, Loop: {main.loop}");
-            Debug.Log($"🔍 [{teamLabel}] Emission - RateOverTime: {emission.rateOverTime.constant}, Enabled: {emission.enabled}");
+            // Debug.Log($"🔍 [{teamLabel}] 파티클 설정 - MaxParticles: {main.maxParticles}, PlayOnAwake: {main.playOnAwake}, Loop: {main.loop}");
+            // Debug.Log($"🔍 [{teamLabel}] Emission - RateOverTime: {emission.rateOverTime.constant}, Enabled: {emission.enabled}");
             
             // 파티클 시스템이 자동 재생 중이면 중지
             if (particle.isPlaying)
             {
                 particle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-                Debug.Log($"⏹️ [{teamLabel}] 자동 재생 중지 후 Emit 사용");
+                // Debug.Log($"⏹️ [{teamLabel}] 자동 재생 중지 후 Emit 사용");
             }
             
             // 파티클 발사 전 현재 파티클 수
@@ -1117,7 +1131,7 @@ void Start()
             // 파티클 발사 후 현재 파티클 수
             int afterCount = particle.particleCount;
             
-            Debug.Log($"💥 [{teamLabel}] 파티클 Emit({count}) 호출 완료! 파티클 수: {beforeCount} → {afterCount} (실제 발사: {afterCount - beforeCount}개)");
+            // Debug.Log($"💥 [{teamLabel}] 파티클 Emit({count}) 호출 완료! 파티클 수: {beforeCount} → {afterCount} (실제 발사: {afterCount - beforeCount}개)");
         }
         catch (System.Exception ex)
         {
@@ -1160,7 +1174,7 @@ void Start()
             return;
         }
         
-        Debug.Log($"🎆 [{teamLabel}] 총 {totalCount}개를 {validParticles.Count}개 파티클에 나눠서 재생!");
+        // Debug.Log($"🎆 [{teamLabel}] 총 {totalCount}개를 {validParticles.Count}개 파티클에 나눠서 재생!");
         
         // 총 횟수를 파티클 개수로 나눔
         int countPerParticle = totalCount / validParticles.Count;
@@ -1179,14 +1193,14 @@ void Start()
                 if (particle.isPlaying)
                 {
                     particle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-                    Debug.Log($"⏹️ [{teamLabel}][{i}] 자동 재생 중지");
+                    // Debug.Log($"⏹️ [{teamLabel}][{i}] 자동 재생 중지");
                 }
                 
                 int beforeCount = particle.particleCount;
                 particle.Emit(emitCount);
                 int afterCount = particle.particleCount;
                 
-                Debug.Log($"💥 [{teamLabel}][{i}] Emit({emitCount}) - 파티클 수: {beforeCount} → {afterCount} (실제: {afterCount - beforeCount}개)");
+                // Debug.Log($"💥 [{teamLabel}][{i}] Emit({emitCount}) - 파티클 수: {beforeCount} → {afterCount} (실제: {afterCount - beforeCount}개)");
             }
             catch (System.Exception ex)
             {
@@ -1194,7 +1208,7 @@ void Start()
             }
         }
         
-        Debug.Log($"✅ [{teamLabel}] 배열 파티클 재생 완료!");
+        // Debug.Log($"✅ [{teamLabel}] 배열 파티클 재생 완료!");
     }
     
     /// <summary>
@@ -1216,7 +1230,7 @@ void Start()
             yield break;
         }
         
-        Debug.Log($"🎆 [{teamLabel}] {count}회 파티클 분산 재생 시작!");
+        // Debug.Log($"🎆 [{teamLabel}] {count}회 파티클 분산 재생 시작!");
         
         // 1초를 count 개수로 나누어 시간 간격 계산
         float interval = 1f / count;
@@ -1233,7 +1247,7 @@ void Start()
             }
         }
         
-        Debug.Log($"✅ [{teamLabel}] {count}회 파티클 분산 재생 완료!");
+        // Debug.Log($"✅ [{teamLabel}] {count}회 파티클 분산 재생 완료!");
     }
     
     /// <summary>
@@ -1275,7 +1289,7 @@ void Start()
             yield break;
         }
         
-        Debug.Log($"🎆 [{teamLabel}] 총 {totalCount}회를 {validParticles.Count}개 파티클에 나눠서 재생!");
+        // Debug.Log($"🎆 [{teamLabel}] 총 {totalCount}회를 {validParticles.Count}개 파티클에 나눠서 재생!");
         
         // 총 횟수를 파티클 개수로 나눔
         int countPerParticle = totalCount / validParticles.Count;
@@ -1287,7 +1301,7 @@ void Start()
         {
             int assignedCount = countPerParticle + (i < remainder ? 1 : 0);
             countsPerParticle.Add(assignedCount);
-            Debug.Log($"   [{teamLabel}] 파티클[{i}]: {assignedCount}회 할당");
+            // Debug.Log($"   [{teamLabel}] 파티클[{i}]: {assignedCount}회 할당");
         }
         
         // 1초를 totalCount로 나눈 간격 계산
@@ -1327,7 +1341,7 @@ void Start()
             }
         }
         
-        Debug.Log($"✅ [{teamLabel}] 배열 파티클 분산 재생 완료!");
+        // Debug.Log($"✅ [{teamLabel}] 배열 파티클 분산 재생 완료!");
     }
     
     /// <summary>
@@ -1348,7 +1362,7 @@ void Start()
         {
             // 파티클 재생 (Emit 사용으로 더 정확한 제어)
             particle.Emit(1);
-            Debug.Log($"💥 [{teamLabel}] 파티클 재생 ({currentCount}/{totalCount})");
+            // Debug.Log($"💥 [{teamLabel}] 파티클 재생 ({currentCount}/{totalCount})");
         }
         catch (System.Exception ex)
         {
@@ -1376,12 +1390,12 @@ void Start()
             }
             
             // Desktop(LED)에서는 winner 정보 불필요 — 결과창만 표시
-            Debug.Log($"🏆 게임 종료! 결과창 표시 (Desktop/LED)");
+            // Debug.Log($"🏆 게임 종료! 결과창 표시 (Desktop/LED)");
             
             // 모든 결과창 오브젝트 활성화 및 점멸 효과 적용
             if (resultGroupObjects != null && resultGroupObjects.Length > 0)
             {
-                Debug.Log($"🎊 결과창 표시 시작 - 총 {resultGroupObjects.Length}개");
+                // Debug.Log($"🎊 결과창 표시 시작 - 총 {resultGroupObjects.Length}개");
                 
                 for (int i = 0; i < resultGroupObjects.Length; i++)
                 {
@@ -1393,7 +1407,7 @@ void Start()
                         
                         // 개인전: 기본 WinRed 호출 (단일 색상 통일)
                         resultPanel.WinRed();
-                        Debug.Log($"🏆 [결과창] 표시: {resultPanel.gameObject.name} (개인전)");
+                        // Debug.Log($"🏆 [결과창] 표시: {resultPanel.gameObject.name} (개인전)");
                     }
                     else
                     {
@@ -1401,7 +1415,7 @@ void Start()
                     }
                 }
                 
-                Debug.Log("✅ 결과창 표시 완료!");
+                // Debug.Log("✅ 결과창 표시 완료!");
                 
                 // 모든 결과창 동시에 12초 동안 점멸 효과 시작
                 StartCoroutine(BlinkResultPanelsFor12Seconds());
@@ -1429,7 +1443,7 @@ void Start()
             yield break;
         }
         
-        Debug.Log("✨ 결과창 12초 점멸 효과 시작 (모든 패널 동시에)");
+        // Debug.Log("✨ 결과창 12초 점멸 효과 시작 (모든 패널 동시에)");
         
         float totalDuration = 12f; // 총 12초
         float blinkCycleDuration = 1f; // 1초마다 한 사이클 (0.5초 페이드 인 + 0.5초 페이드 아웃)
@@ -1462,7 +1476,7 @@ void Start()
             yield return null;
         }
         
-        Debug.Log("✅ 12초 점멸 완료 - 최종 페이드 아웃 시작");
+        // Debug.Log("✅ 12초 점멸 완료 - 최종 페이드 아웃 시작");
         
         float fadeOutDuration = 0.5f;
         float fadeOutElapsed = 0f;
@@ -1499,7 +1513,7 @@ void Start()
             }
         }
         
-        Debug.Log("🚪 결과창 12초 점멸 후 비활성화 완료");
+        // Debug.Log("🚪 결과창 12초 점멸 후 비활성화 완료");
     }
     
     /// <summary>
@@ -1509,7 +1523,7 @@ void Start()
     {
         if (resultGroupObjects != null && resultGroupObjects.Length > 0)
         {
-            Debug.Log($"🚪 결과창 닫기 시작 - 총 {resultGroupObjects.Length}개");
+            // Debug.Log($"🚪 결과창 닫기 시작 - 총 {resultGroupObjects.Length}개");
             
             if (resultPanelCanvasGroups != null)
             {
@@ -1527,11 +1541,11 @@ void Start()
                 if (resultPanel != null)
                 {
                     resultPanel.gameObject.SetActive(false);
-                    Debug.Log($"✅ [결과창 닫기] {resultPanel.gameObject.name} (알파값 초기화)");
+                    // Debug.Log($"✅ [결과창 닫기] {resultPanel.gameObject.name} (알파값 초기화)");
                 }
             }
             
-            Debug.Log("✅ 모든 결과창 닫기 완료!");
+            // Debug.Log("✅ 모든 결과창 닫기 완료!");
         }
         else
         {
@@ -1543,7 +1557,7 @@ void Start()
     /* 기존 파티클 카운트 초기화 함수 (사용 안 함)
     void ResetParticleCount()
     {
-        Debug.Log($"🔄 [PARTICLE COUNT RESET] Red: {redTeamHitCount}회, Blue: {blueTeamHitCount}회 → 0으로 초기화");
+        // Debug.Log($"🔄 [PARTICLE COUNT RESET] Red: {redTeamHitCount}회, Blue: {blueTeamHitCount}회 → 0으로 초기화");
         
         redTeamHitCount = 0;
         blueTeamHitCount = 0;
@@ -1553,13 +1567,13 @@ void Start()
         {
             StopCoroutine(particleBurstCoroutine);
             particleBurstCoroutine = null;
-            Debug.Log("🛑 [PARTICLE CYCLE] 파티클 분산 재생 사이클 중지");
+            // Debug.Log("🛑 [PARTICLE CYCLE] 파티클 분산 재생 사이클 중지");
         }
         
         // 팀 점수 추적 초기화
         lastRedTeamScore = 0;
         lastBlueTeamScore = 0;
-        Debug.Log("🔄 [TEAM SCORE] 이전 팀 점수 추적 데이터 초기화");
+        // Debug.Log("🔄 [TEAM SCORE] 이전 팀 점수 추적 데이터 초기화");
     }
     */ // 기존 파티클 시스템 주석 끝
     
@@ -1572,7 +1586,7 @@ void Start()
     /// </summary>
     void InitializeElementParticlePool()
     {
-        Debug.Log($"🎆 [Element Pool] 풀 초기화 시작 - Element당 풀 크기: {poolSize} (3변형)");
+        // Debug.Log($"🎆 [Element Pool] 풀 초기화 시작 - Element당 풀 크기: {poolSize} (3변형)");
 
         ParticleSystem[][] variantArrays = { elementParticlePrefabsA, elementParticlePrefabsB, elementParticlePrefabsC };
 
@@ -1580,7 +1594,7 @@ void Start()
 
         if (particlePoolContainer != null)
         {
-            Debug.Log($"✅ [Element Pool] 파티클 컨테이너 사용: {particlePoolContainer.name}");
+            // Debug.Log($"✅ [Element Pool] 파티클 컨테이너 사용: {particlePoolContainer.name}");
         }
         else
         {
@@ -1646,10 +1660,10 @@ void Start()
             elementParticlePools[elementName] = pool;
             activeElementParticles[elementName] = activeList;
 
-            Debug.Log($"✅ [Element Pool] {elementName}: {totalCreated}개 생성 완료 ({validPrefabs.Count}변형)");
+            // Debug.Log($"✅ [Element Pool] {elementName}: {totalCreated}개 생성 완료 ({validPrefabs.Count}변형)");
         }
 
-        Debug.Log($"✅ [Element Pool] 총 {elementParticlePools.Count}개 Element 풀 초기화 완료 (각 {poolSize}개, 3변형 셔플)");
+        // Debug.Log($"✅ [Element Pool] 총 {elementParticlePools.Count}개 Element 풀 초기화 완료 (각 {poolSize}개, 3변형 셔플)");
     }
 
     /// <summary>
@@ -1670,7 +1684,7 @@ void Start()
             string element = data["element"]?.ToString() ?? "None";
             string playerName = data["playerName"]?.ToString() ?? "";
 
-            Debug.Log($"🎆 [IMMEDIATE PRESS] {playerName} (element: {element}) → 능력 파티클 재생!");
+            // Debug.Log($"🎆 [IMMEDIATE PRESS] {playerName} (element: {element}) → 능력 파티클 재생!");
 
             // Element에 해당하는 파티클 즉시 재생
             PlayElementParticle(element);
@@ -1679,6 +1693,25 @@ void Start()
         {
             Debug.LogError($"❌ [HandleImmediatePress] 오류: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// playerPressImmediate 메시지의 element 필드를 JObject 파싱 없이 빠르게 추출.
+    /// press는 게임 중 가장 빈번한 메시지(초당 수십 회)이므로 이 핫 경로에서
+    /// JObject.Parse + JToken chain의 GC 할당을 회피하기 위한 fast path.
+    /// 메시지 포맷이 변형되어 추출 실패하면 false 반환 → 호출자가 일반 JObject 파싱으로 폴백.
+    /// </summary>
+    private static bool TryFastParsePressElement(string json, out string element)
+    {
+        element = null;
+        const string KEY = "\"element\":\"";
+        int s = json.IndexOf(KEY, StringComparison.Ordinal);
+        if (s < 0) return false;
+        s += KEY.Length;
+        int e = json.IndexOf('"', s);
+        if (e < 0) return false;
+        element = json.Substring(s, e - s);
+        return true;
     }
 
     /// <summary>
@@ -1732,7 +1765,7 @@ void Start()
             ps.gameObject.SetActive(true);
             ps.Play();
 
-            Debug.Log($"✨ [{normalizedElement}] 파티클 재생! 위치: ({randomX:F2}, {randomY:F2}) (사용 가능: {pool.Count}, 활성: {activeList.Count})");
+            // Debug.Log($"✨ [{normalizedElement}] 파티클 재생! 위치: ({randomX:F2}, {randomY:F2}) (사용 가능: {pool.Count}, 활성: {activeList.Count})");
 
             // 1초 후 풀로 반환
             StartCoroutine(ReturnElementParticleToPool(ps, normalizedElement, 1f));
@@ -1765,7 +1798,7 @@ void Start()
             if (wasStillActive)
             {
                 elementParticlePools[element].Enqueue(ps);
-                Debug.Log($"✨ [{element}] 풀 반환 (사용 가능: {elementParticlePools[element].Count}, 활성: {activeElementParticles[element].Count})");
+                // Debug.Log($"✨ [{element}] 풀 반환 (사용 가능: {elementParticlePools[element].Count}, 활성: {activeElementParticles[element].Count})");
             }
             // else: ResetElementParticlePool이 먼저 처리함. 중복 Enqueue 방지 위해 스킵.
         }
@@ -1776,7 +1809,7 @@ void Start()
     /// </summary>
     void ResetElementParticlePool()
     {
-        Debug.Log($"🔄 [Element Pool] 풀 리셋 시작...");
+        // Debug.Log($"🔄 [Element Pool] 풀 리셋 시작...");
 
         foreach (var kvp in activeElementParticles)
         {
@@ -1801,16 +1834,16 @@ void Start()
         // 각 풀의 상태 로그
         foreach (var kvp in elementParticlePools)
         {
-            Debug.Log($"✅ [Element Pool] {kvp.Key}: {kvp.Value.Count}개 사용 가능");
+            // Debug.Log($"✅ [Element Pool] {kvp.Key}: {kvp.Value.Count}개 사용 가능");
         }
 
-        Debug.Log($"✅ [Element Pool] 리셋 완료");
+        // Debug.Log($"✅ [Element Pool] 리셋 완료");
     }
     
     /* 기존 PlayTeamHitParticle 함수 (사용 안 함)
     void PlayTeamHitParticle(string team)
     {
-        Debug.Log($"🎆 [PlayTeamHitParticle] 시작 - 입력된 팀: '{team}'");
+        // Debug.Log($"🎆 [PlayTeamHitParticle] 시작 - 입력된 팀: '{team}'");
         
         if (string.IsNullOrEmpty(team))
         {
@@ -1820,24 +1853,24 @@ void Start()
         
         // 팀 이름 정규화 (대소문자 무시, 공백 제거)
         string normalizedTeam = team.Trim();
-        Debug.Log($"🎆 [PlayTeamHitParticle] 정규화된 팀: '{normalizedTeam}'");
+        // Debug.Log($"🎆 [PlayTeamHitParticle] 정규화된 팀: '{normalizedTeam}'");
         
         if (normalizedTeam.Equals("Red", StringComparison.OrdinalIgnoreCase))
         {
-            Debug.Log($"🔴 [RED TEAM] 파티클 재생 시도 - 파티클 객체: {(redteamHitParticle != null ? "할당됨" : "NULL")}");
+            // Debug.Log($"🔴 [RED TEAM] 파티클 재생 시도 - 파티클 객체: {(redteamHitParticle != null ? "할당됨" : "NULL")}");
             
             if (redteamHitParticle != null)
             {
                 // 파티클 상세 정보 출력
-                Debug.Log($"🔴 [RED TEAM] 파티클 상태 - isPlaying: {redteamHitParticle.isPlaying}, isStopped: {redteamHitParticle.isStopped}, isPaused: {redteamHitParticle.isPaused}");
-                Debug.Log($"🔴 [RED TEAM] 파티클 GameObject - 이름: {redteamHitParticle.gameObject.name}, 활성화: {redteamHitParticle.gameObject.activeSelf}, 계층 활성화: {redteamHitParticle.gameObject.activeInHierarchy}");
+                // Debug.Log($"🔴 [RED TEAM] 파티클 상태 - isPlaying: {redteamHitParticle.isPlaying}, isStopped: {redteamHitParticle.isStopped}, isPaused: {redteamHitParticle.isPaused}");
+                // Debug.Log($"🔴 [RED TEAM] 파티클 GameObject - 이름: {redteamHitParticle.gameObject.name}, 활성화: {redteamHitParticle.gameObject.activeSelf}, 계층 활성화: {redteamHitParticle.gameObject.activeInHierarchy}");
                 
                 // 🎆 방법 1: Clear() + Play() (가장 확실한 방법)
                 try
                 {
                     redteamHitParticle.Clear();
                     redteamHitParticle.Play();
-                    Debug.Log($"🔴 [RED TEAM] 파티클 Clear() + Play() 호출 완료!");
+                    // Debug.Log($"🔴 [RED TEAM] 파티클 Clear() + Play() 호출 완료!");
                 }
                 catch (System.Exception ex)
                 {
@@ -1845,7 +1878,7 @@ void Start()
                 }
                 
                 // 재생 후 상태 확인
-                Debug.Log($"🔴 [RED TEAM] 재생 후 상태 - isPlaying: {redteamHitParticle.isPlaying}");
+                // Debug.Log($"🔴 [RED TEAM] 재생 후 상태 - isPlaying: {redteamHitParticle.isPlaying}");
                 
                 // 🎆 방법 2: 코루틴으로 강제 재생 (Play()가 작동하지 않는 경우 대비)
                 StartCoroutine(ForcePlayParticle(redteamHitParticle, "🔴 RED TEAM"));
@@ -1857,20 +1890,20 @@ void Start()
         }
         else if (normalizedTeam.Equals("Blue", StringComparison.OrdinalIgnoreCase))
         {
-            Debug.Log($"🔵 [BLUE TEAM] 파티클 재생 시도 - 파티클 객체: {(blueteamHitParticle != null ? "할당됨" : "NULL")}");
+            // Debug.Log($"🔵 [BLUE TEAM] 파티클 재생 시도 - 파티클 객체: {(blueteamHitParticle != null ? "할당됨" : "NULL")}");
             
             if (blueteamHitParticle != null)
             {
                 // 파티클 상세 정보 출력
-                Debug.Log($"🔵 [BLUE TEAM] 파티클 상태 - isPlaying: {blueteamHitParticle.isPlaying}, isStopped: {blueteamHitParticle.isStopped}, isPaused: {blueteamHitParticle.isPaused}");
-                Debug.Log($"🔵 [BLUE TEAM] 파티클 GameObject - 이름: {blueteamHitParticle.gameObject.name}, 활성화: {blueteamHitParticle.gameObject.activeSelf}, 계층 활성화: {blueteamHitParticle.gameObject.activeInHierarchy}");
+                // Debug.Log($"🔵 [BLUE TEAM] 파티클 상태 - isPlaying: {blueteamHitParticle.isPlaying}, isStopped: {blueteamHitParticle.isStopped}, isPaused: {blueteamHitParticle.isPaused}");
+                // Debug.Log($"🔵 [BLUE TEAM] 파티클 GameObject - 이름: {blueteamHitParticle.gameObject.name}, 활성화: {blueteamHitParticle.gameObject.activeSelf}, 계층 활성화: {blueteamHitParticle.gameObject.activeInHierarchy}");
                 
                 // 🎆 방법 1: Clear() + Play() (가장 확실한 방법)
                 try
                 {
                     blueteamHitParticle.Clear();
                     blueteamHitParticle.Play();
-                    Debug.Log($"🔵 [BLUE TEAM] 파티클 Clear() + Play() 호출 완료!");
+                    // Debug.Log($"🔵 [BLUE TEAM] 파티클 Clear() + Play() 호출 완료!");
                 }
                 catch (System.Exception ex)
                 {
@@ -1878,7 +1911,7 @@ void Start()
                 }
                 
                 // 재생 후 상태 확인
-                Debug.Log($"🔵 [BLUE TEAM] 재생 후 상태 - isPlaying: {blueteamHitParticle.isPlaying}");
+                // Debug.Log($"🔵 [BLUE TEAM] 재생 후 상태 - isPlaying: {blueteamHitParticle.isPlaying}");
                 
                 // 🎆 방법 2: 코루틴으로 강제 재생 (Play()가 작동하지 않는 경우 대비)
                 StartCoroutine(ForcePlayParticle(blueteamHitParticle, "🔵 BLUE TEAM"));
@@ -1908,7 +1941,7 @@ void Start()
             yield break;
         }
         
-        Debug.Log($"🔄 [{teamLabel}] ForcePlayParticle 시작 - 0.1초 대기 후 재생");
+        // Debug.Log($"🔄 [{teamLabel}] ForcePlayParticle 시작 - 0.1초 대기 후 재생");
         
         // 다음 프레임까지 대기
         yield return null;
@@ -1916,20 +1949,20 @@ void Start()
         // 파티클이 재생 중이 아니면 다시 시도
         if (!particle.isPlaying)
         {
-            Debug.Log($"⚠️ [{teamLabel}] 파티클이 재생되지 않음 - 다시 시도");
+            // Debug.Log($"⚠️ [{teamLabel}] 파티클이 재생되지 않음 - 다시 시도");
             particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             yield return new WaitForSeconds(0.05f);
             particle.Play();
-            Debug.Log($"🔄 [{teamLabel}] Stop() + Play() 재시도 완료");
+            // Debug.Log($"🔄 [{teamLabel}] Stop() + Play() 재시도 완료");
         }
         else
         {
-            Debug.Log($"✅ [{teamLabel}] 파티클이 정상적으로 재생 중입니다!");
+            // Debug.Log($"✅ [{teamLabel}] 파티클이 정상적으로 재생 중입니다!");
         }
         
         // 최종 상태 확인
         yield return new WaitForSeconds(0.1f);
-        Debug.Log($"🎆 [{teamLabel}] 최종 상태 - isPlaying: {particle.isPlaying}, particleCount: {particle.particleCount}");
+        // Debug.Log($"🎆 [{teamLabel}] 최종 상태 - isPlaying: {particle.isPlaying}, particleCount: {particle.particleCount}");
     }
     */ // 기존 파티클 시스템 주석 끝
     
@@ -1938,64 +1971,7 @@ void Start()
     // ===================================
     
     /// <summary>
-    /// gameStart 메시지에서 플레이어들의 element를 수집합니다
-    /// </summary>
-    void CollectPlayerElements(JObject message)
-    {
-        activeElementIndices.Clear();
-        currentElementCycleIndex = 0;
-        
-        try
-        {
-            var data = message["data"];
-            if (data == null)
-            {
-                Debug.LogWarning("⚠️ [CollectPlayerElements] data가 없습니다!");
-                return;
-            }
-            
-            var players = data["players"] as JArray;
-            if (players == null || players.Count == 0)
-            {
-                Debug.LogWarning("⚠️ [CollectPlayerElements] players 배열이 없거나 비어있습니다!");
-                return;
-            }
-            
-            HashSet<int> uniqueIndices = new HashSet<int>();
-            
-            foreach (var player in players)
-            {
-                // Admin/Observer 제외
-                bool isAdmin = player["isAdmin"]?.Value<bool>() ?? false;
-                bool isObserver = player["isObserver"]?.Value<bool>() ?? false;
-                if (isAdmin || isObserver) continue;
-                
-                string element = player["element"]?.ToString() ?? "None";
-                if (element == "None") continue;
-                
-                // element 이름으로 인덱스 찾기
-                for (int i = 0; i < elementNames.Length; i++)
-                {
-                    if (elementNames[i].Equals(element, StringComparison.OrdinalIgnoreCase))
-                    {
-                        uniqueIndices.Add(i);
-                        Debug.Log($"🎯 [CollectPlayerElements] 플레이어 '{player["name"]}' → element: {element} (index: {i})");
-                        break;
-                    }
-                }
-            }
-            
-            activeElementIndices = new List<int>(uniqueIndices);
-            Debug.Log($"✅ [CollectPlayerElements] 수집 완료 - {activeElementIndices.Count}개 고유 element: [{string.Join(", ", activeElementIndices.ConvertAll(i => elementNames[i]))}]");
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"❌ [CollectPlayerElements] 오류: {ex.Message}");
-        }
-    }
-    
-    /// <summary>
-    /// 듀얼 VideoPlayer CanvasGroup 초기화 (크로스 디졸브용).
+    /// VideoPlayer / Idle CanvasGroup 초기화 (idle → 게임 영상 크로스 디졸브용).
     /// </summary>
     void InitializeGameVideoCanvasGroups()
     {
@@ -2019,221 +1995,128 @@ void Start()
             gameCanvasGroupB.alpha = 0f;
         }
 
-        usePlayerA = true;
-        Debug.Log("✅ [InitGameVideoCanvasGroups] 듀얼 VideoPlayer CanvasGroup 초기화 완료");
-    }
-    
-    void StartElementCycleVideo()
-    {
-        if (gameVideoPlayerA == null || gameVideoPlayerB == null)
+        if (idleImage != null)
         {
-            Debug.LogError("❌ [StartElementCycleVideo] gameVideoPlayerA 또는 B가 할당되지 않았습니다!");
-            return;
+            idleCanvasGroup = idleImage.GetComponent<CanvasGroup>();
+            if (idleCanvasGroup == null)
+            {
+                idleCanvasGroup = idleImage.gameObject.AddComponent<CanvasGroup>();
+            }
+            idleCanvasGroup.alpha = 1f;
         }
 
-        if (gameImageA == null || gameImageB == null)
-        {
-            Debug.LogError("❌ [StartElementCycleVideo] gameImageA 또는 B가 할당되지 않았습니다!");
-            return;
-        }
-
-        if (activeElementIndices.Count == 0)
-        {
-            Debug.LogWarning("⚠️ [StartElementCycleVideo] 활성 element가 없습니다!");
-            return;
-        }
-
-        // idle 비디오 정지
-        StopIdleVideo();
-
-        // 게임 영상 화면 활성화 (A만 보이도록)
-        gameImageA.gameObject.SetActive(true);
-        gameImageB.gameObject.SetActive(true);
-        if (gameCanvasGroupA != null) gameCanvasGroupA.alpha = 1f;
-        if (gameCanvasGroupB != null) gameCanvasGroupB.alpha = 0f;
-        usePlayerA = true;
-        isGameVideoPlaying = true;
-
-        // 순환 재생 코루틴 시작
-        if (elementCycleCoroutine != null)
-        {
-            StopCoroutine(elementCycleCoroutine);
-        }
-        currentElementCycleIndex = 0;
-        elementCycleCoroutine = StartCoroutine(ElementVideoCycleCoroutine());
-
-        Debug.Log($"▶️ [StartElementCycleVideo] 듀얼 크로스 디졸브 순환 재생 시작 ({activeElementIndices.Count}개 element)");
+        // Debug.Log("✅ [InitGameVideoCanvasGroups] 게임/Idle CanvasGroup 초기화 완료");
     }
     
     /// <summary>
-    /// element 영상을 순환하며 재생하는 코루틴 (0.2초 오버랩 크로스 디졸브).
-    /// 현재 클립이 종료되기 crossfadeDuration 초 전에 다음 클립을 Play 시작하고
-    /// 두 영상이 동시 재생되는 동안 알파를 교차 페이드해 부드럽게 교체합니다.
+    /// 통합 게임 영상(단일 클립 loop) 재생을 시작합니다.
+    /// idle → 게임 영상 크로스 디졸브를 수행하고, 이후에는 VideoPlayer 자체 loop으로 재생됩니다.
     /// </summary>
-    IEnumerator ElementVideoCycleCoroutine()
+    void StartGameVideo()
     {
-        // 현재 재생 중인 클립의 Play 시점 (Time.time 기준, 오버랩 시작 시점 계산용)
-        float currentPlayStartTime = 0f;
-
-        // --- 첫 클립: PlayerA에 바로 재생 ---
-        if (TryGetClipAt(currentElementCycleIndex, out VideoClip firstClip, out string firstElementName))
+        if (gameVideoPlayerA == null)
         {
-            Debug.Log($"🎬 [ElementCycle] 첫 재생: {firstElementName} (clip: {firstClip.name})");
-
-            gameVideoPlayerA.clip = firstClip;
-            gameVideoPlayerA.isLooping = false;
-            gameVideoPlayerA.time = 0;
-            gameVideoPlayerA.Prepare();
-
-            float firstPrepareStart = Time.time;
-            while (!gameVideoPlayerA.isPrepared && (Time.time - firstPrepareStart) < PREPARE_TIMEOUT && isGameVideoPlaying)
-            {
-                yield return null;
-            }
-            if (!isGameVideoPlaying) yield break;
-
-            gameVideoPlayerA.Play();
-            // 첫 프레임 도착 대기 (VideoPlayer.frame: 재생 전 -1, 첫 프레임은 0)
-            int firstFrameWait = FIRST_FRAME_WAIT_MAX_FRAMES;
-            while (gameVideoPlayerA.frame < 0 && firstFrameWait-- > 0 && isGameVideoPlaying)
-            {
-                yield return null;
-            }
-            currentPlayStartTime = Time.time;
-
-            if (gameCanvasGroupA != null) gameCanvasGroupA.alpha = 1f;
-            if (gameCanvasGroupB != null) gameCanvasGroupB.alpha = 0f;
-            usePlayerA = true;
-        }
-        else
-        {
-            yield return new WaitForSeconds(INVALID_CLIP_SKIP_DELAY);
-            currentElementCycleIndex = (currentElementCycleIndex + 1) % Mathf.Max(activeElementIndices.Count, 1);
+            Debug.LogError("❌ [StartGameVideo] gameVideoPlayerA가 할당되지 않았습니다!");
+            return;
         }
 
-        // --- 메인 루프: 현재 클립 재생 중 다음 클립 백그라운드 Prepare → 오버랩 전환 ---
-        while (isGameVideoPlaying && activeElementIndices.Count > 0)
+        if (gameImageA == null)
         {
-            VideoPlayer currentPlayer = usePlayerA ? gameVideoPlayerA : gameVideoPlayerB;
-            VideoPlayer nextPlayer    = usePlayerA ? gameVideoPlayerB : gameVideoPlayerA;
-            CanvasGroup currentGroup  = usePlayerA ? gameCanvasGroupA : gameCanvasGroupB;
-            CanvasGroup nextGroup     = usePlayerA ? gameCanvasGroupB : gameCanvasGroupA;
+            Debug.LogError("❌ [StartGameVideo] gameImageA가 할당되지 않았습니다!");
+            return;
+        }
 
-            // 다음 element 클립 결정
-            int nextCycleIdx = (currentElementCycleIndex + 1) % activeElementIndices.Count;
-            if (!TryGetClipAt(nextCycleIdx, out VideoClip nextClip, out string nextElementName))
-            {
-                // 다음 클립이 무효면 현재 끝까지 재생 후 스킵
-                while (currentPlayer.isPlaying && isGameVideoPlaying) yield return null;
-                currentElementCycleIndex = nextCycleIdx;
-                yield return new WaitForSeconds(INVALID_CLIP_SKIP_DELAY);
-                continue;
-            }
+        if (gameVideoClip == null)
+        {
+            Debug.LogWarning("⚠️ [StartGameVideo] gameVideoClip이 할당되지 않았습니다 - idle 영상 유지");
+            return;
+        }
 
-            // 다음 클립 백그라운드 Prepare (현재 재생 중 로딩)
-            nextPlayer.clip = nextClip;
-            nextPlayer.isLooping = false;
-            nextPlayer.time = 0;
-            nextPlayer.Prepare();
+        // idle은 디졸브가 끝난 뒤에 정지 (idle → 게임 영상 크로스 디졸브용)
+        gameImageA.gameObject.SetActive(true);
+        if (gameImageB != null) gameImageB.gameObject.SetActive(false);
+        if (gameCanvasGroupA != null) gameCanvasGroupA.alpha = 0f;
+        if (gameCanvasGroupB != null) gameCanvasGroupB.alpha = 0f;
+        if (idleCanvasGroup != null) idleCanvasGroup.alpha = 1f;
+        isGameVideoPlaying = true;
 
-            // 크로스 디졸브 시작 시점 = current 자연 종료 - crossfadeDuration
-            VideoClip currentClip = currentPlayer.clip;
-            float clipLength = (currentClip != null) ? (float)currentClip.length : 0f;
-            float fadeStartAbsolute = currentPlayStartTime + Mathf.Max(clipLength - crossfadeDuration, 0f);
+        if (gameVideoCoroutine != null)
+        {
+            StopCoroutine(gameVideoCoroutine);
+        }
+        gameVideoCoroutine = StartCoroutine(StartGameVideoCoroutine());
 
-            // 1. fade 시작 시점까지 current 자연 재생 (next는 백그라운드 Prepare 중)
-            while (Time.time < fadeStartAbsolute && isGameVideoPlaying) yield return null;
-            if (!isGameVideoPlaying) break;
+        // Debug.Log($"▶️ [StartGameVideo] 통합 게임 영상 loop 재생 시작 (clip: {gameVideoClip.name})");
+    }
 
-            // 2. Prepare 완료 확인 (이미 iteration 시작 시점에 호출됐음, 거의 항상 완료 상태)
-            float prepareWaitStart = Time.time;
-            while (!nextPlayer.isPrepared && (Time.time - prepareWaitStart) < PREPARE_TIMEOUT && isGameVideoPlaying)
-            {
-                yield return null;
-            }
-            if (!isGameVideoPlaying) break;
+    /// <summary>
+    /// 통합 게임 영상을 PlayerA에 loop로 올리고 idle → 게임 영상 크로스 디졸브를 수행합니다.
+    /// 디졸브 완료 후에는 VideoPlayer 자체 loop이 영상을 계속 재생하므로 코루틴은 종료됩니다.
+    /// </summary>
+    IEnumerator StartGameVideoCoroutine()
+    {
+        // Debug.Log($"🎬 [GameVideo] 재생 시작: {gameVideoClip.name}");
 
-            // 3. next를 current 바로 위에 배치 (파티클 RawImage 아래 유지)
-            if (nextGroup != null && currentGroup != null)
-            {
-                int currentSiblingIndex = currentGroup.transform.GetSiblingIndex();
-                nextGroup.transform.SetSiblingIndex(currentSiblingIndex + 1);
-            }
+        gameVideoPlayerA.clip = gameVideoClip;
+        gameVideoPlayerA.isLooping = true;
+        gameVideoPlayerA.time = 0;
+        gameVideoPlayerA.Prepare();
 
-            // 4. next 재생 시작 + 첫 프레임 도착 대기 (검은 프레임이 페이드인되는 것을 방지)
-            nextPlayer.Play();
-            int firstFrameWait = FIRST_FRAME_WAIT_MAX_FRAMES;
-            while (nextPlayer.frame < 0 && firstFrameWait-- > 0 && isGameVideoPlaying) yield return null;
-            if (!isGameVideoPlaying) break;
+        float prepareStart = Time.time;
+        while (!gameVideoPlayerA.isPrepared && (Time.time - prepareStart) < PREPARE_TIMEOUT && isGameVideoPlaying)
+        {
+            yield return null;
+        }
+        if (!isGameVideoPlaying) yield break;
 
-            float nextPlayStartTime = Time.time;
+        gameVideoPlayerA.Play();
+        // 첫 프레임 도착 대기 (검은 프레임이 페이드인되는 것을 방지)
+        int firstFrameWait = FIRST_FRAME_WAIT_MAX_FRAMES;
+        while (gameVideoPlayerA.frame < 0 && firstFrameWait-- > 0 && isGameVideoPlaying)
+        {
+            yield return null;
+        }
+        if (!isGameVideoPlaying) yield break;
 
-            // 5. 크로스 디졸브: current는 alpha 1 고정, next만 0→1로 lerp
-            //    ※ 두 alpha를 동시에 1↔0으로 움직이면 곱셈 합성으로 인해 배경(검정)이 섞여 중간에 어두워짐
-            //      (수식: bg×(1-a1)(1-a2) + ... → t=0.5에서 bg 25% 노출).
-            //    next만 페이드하면 current가 항상 100%로 깔려있어 배경이 합성에 끼어들지 않음.
+        // idle → 게임 영상 크로스 디졸브 (idle.alpha 1→0, gameA.alpha 0→1 동시 보간)
+        if (idleCanvasGroup != null && gameCanvasGroupA != null && crossfadeDuration > 0f)
+        {
             float fadeStart = Time.time;
             while (isGameVideoPlaying)
             {
                 float t = (Time.time - fadeStart) / crossfadeDuration;
                 if (t >= 1f) break;
-                if (nextGroup != null) nextGroup.alpha = t;
+                idleCanvasGroup.alpha = 1f - t;
+                gameCanvasGroupA.alpha = t;
                 yield return null;
             }
-            if (!isGameVideoPlaying) break;
-
-            // 6. 페이드 완료, current 정지
-            if (nextGroup != null)    nextGroup.alpha    = 1f;
-            if (currentGroup != null) currentGroup.alpha = 0f;
-            currentPlayer.Stop();
-
-            Debug.Log($"🎬 [ElementCycle] 크로스 디졸브 전환: {elementNames[activeElementIndices[currentElementCycleIndex]]} → {nextElementName} (fade:{crossfadeDuration:F2}s)");
-
-            usePlayerA = !usePlayerA;
-            currentElementCycleIndex = nextCycleIdx;
-            currentPlayStartTime = nextPlayStartTime;
         }
+        if (!isGameVideoPlaying) yield break;
 
-        Debug.Log("🔚 [ElementCycle] 순환 재생 코루틴 종료");
-    }
+        if (idleCanvasGroup != null) idleCanvasGroup.alpha = 0f;
+        if (gameCanvasGroupA != null) gameCanvasGroupA.alpha = 1f;
+        if (gameCanvasGroupB != null) gameCanvasGroupB.alpha = 0f;
 
-    /// <summary>
-    /// activeElementIndices[cycleIdx]에 해당하는 element의 클립과 이름을 가져옵니다. 무효 시 false.
-    /// </summary>
-    private bool TryGetClipAt(int cycleIdx, out VideoClip clip, out string elementName)
-    {
-        clip = null;
-        elementName = null;
+        // 디졸브 끝 → idle 비디오 정지
+        StopIdleVideo();
 
-        if (activeElementIndices.Count == 0) return false;
-
-        int idx = activeElementIndices[cycleIdx];
-        if (idx >= 0 && idx < elementGameClips.Length && elementGameClips[idx] != null)
-        {
-            clip = elementGameClips[idx];
-            elementName = elementNames[idx];
-            return true;
-        }
-
-        Debug.LogWarning($"⚠️ [ElementCycle] element index {idx}에 유효한 게임 클립이 없습니다! 건너뜁니다.");
-        return false;
+        // Debug.Log("✅ [GameVideo] idle → 게임 영상 디졸브 완료, loop 재생 진행 중");
     }
     
     /// <summary>
-    /// 게임 중 순환 영상을 정지합니다
+    /// 게임 중 영상을 정지합니다
     /// </summary>
     void StopGameVideo()
     {
         isGameVideoPlaying = false;
 
-        if (elementCycleCoroutine != null)
+        if (gameVideoCoroutine != null)
         {
-            StopCoroutine(elementCycleCoroutine);
-            elementCycleCoroutine = null;
-            Debug.Log("⏹️ 게임 중 순환 영상 코루틴 중지");
+            StopCoroutine(gameVideoCoroutine);
+            gameVideoCoroutine = null;
+            // Debug.Log("⏹️ 게임 중 영상 코루틴 중지");
         }
 
-        // 듀얼 VideoPlayer 모두 정지
         if (gameVideoPlayerA != null)
         {
             if (gameVideoPlayerA.isPlaying) gameVideoPlayerA.Stop();
@@ -2241,6 +2124,7 @@ void Start()
             gameVideoPlayerA.clip = null;
         }
 
+        // PlayerB는 사용하지 않지만, 인스펙터 할당이 남아있을 수 있어 안전하게 정리
         if (gameVideoPlayerB != null)
         {
             if (gameVideoPlayerB.isPlaying) gameVideoPlayerB.Stop();
@@ -2251,15 +2135,12 @@ void Start()
         if (gameImageA != null) gameImageA.gameObject.SetActive(false);
         if (gameImageB != null) gameImageB.gameObject.SetActive(false);
 
-        usePlayerA = true;
         if (gameCanvasGroupA != null) gameCanvasGroupA.alpha = 1f;
         if (gameCanvasGroupB != null) gameCanvasGroupB.alpha = 0f;
+        // 다음 idle 복귀 시 idleImage가 정상 표시되도록 알파 복구
+        if (idleCanvasGroup != null) idleCanvasGroup.alpha = 1f;
 
-        // 순환 상태 초기화
-        activeElementIndices.Clear();
-        currentElementCycleIndex = 0;
-        
-        Debug.Log("⏹️ 듀얼 VideoPlayer 정지 및 초기화 완료");
+        // Debug.Log("⏹️ 게임 영상 정지 및 초기화 완료");
     }
     
     /// <summary>
@@ -2267,37 +2148,38 @@ void Start()
     /// </summary>
     void PlayIdleVideo()
     {
-        Debug.Log("🎥 [PlayIdleVideo] Idle 비디오 재생 시작!");
-        
+        // Debug.Log("🎥 [PlayIdleVideo] Idle 비디오 재생 시작!");
+
         if (idleVideoPlayer == null)
         {
             Debug.LogError("❌ idleVideoPlayer가 할당되지 않았습니다!");
             return;
         }
-        
+
         if (idleImage == null)
         {
             Debug.LogError("❌ idleImage가 할당되지 않았습니다!");
             return;
         }
-        
+
         // Idle RawImage 활성화
         idleImage.gameObject.SetActive(true);
-        
+
         // 루프 재생
         if (idleVideoPlayer.clip != null)
         {
             idleVideoPlayer.isLooping = true;
             idleVideoPlayer.time = 0;
+            idleVideoPlayer.playbackSpeed = 1.0f;
             idleVideoPlayer.Play();
-            Debug.Log($"▶️ [PlayIdleVideo] Idle 비디오 재생 - Clip: {idleVideoPlayer.clip.name} (루프 모드)");
+            // Debug.Log($"▶️ [PlayIdleVideo] Idle 비디오 재생 - Clip: {idleVideoPlayer.clip.name} (루프 모드)");
         }
         else
         {
             Debug.LogError("❌ idleVideoPlayer에 클립이 할당되지 않았습니다!");
         }
     }
-    
+
     /// <summary>
     /// Idle 비디오를 정지합니다
     /// </summary>
@@ -2308,18 +2190,21 @@ void Start()
             if (idleVideoPlayer.isPlaying)
             {
                 idleVideoPlayer.Stop();
-                Debug.Log("⏹️ Idle 비디오 정지");
+                // Debug.Log("⏹️ Idle 비디오 정지");
             }
             idleVideoPlayer.time = 0;
         }
-        
+
         if (idleImage != null)
         {
             idleImage.gameObject.SetActive(false);
-            Debug.Log("🖼️ Idle 비디오 화면 비활성화");
+            // Debug.Log("🖼️ Idle 비디오 화면 비활성화");
         }
+
+        // 다음 PlayIdleVideo() 시 알파 0인 채로 보이지 않는 문제 방지
+        if (idleCanvasGroup != null) idleCanvasGroup.alpha = 1f;
     }
-    
+
     /// <summary>
     /// gameEnd 메시지에서 우승자의 element를 추출합니다
     /// </summary>
@@ -2336,7 +2221,7 @@ void Start()
             {
                 string element = rankings[0]["element"]?.ToString() ?? "None";
                 string nickname = rankings[0]["nickname"]?.ToString() ?? "Unknown";
-                Debug.Log($"🏆 [GetWinnerElement] 우승자: {nickname}, Element: {element}");
+                // Debug.Log($"🏆 [GetWinnerElement] 우승자: {nickname}, Element: {element}");
                 return element;
             }
             
@@ -2345,7 +2230,7 @@ void Start()
             if (winner != null)
             {
                 string winnerId = winner["playerId"]?.ToString() ?? "";
-                Debug.Log($"🏆 [GetWinnerElement] winner.playerId: {winnerId} (element 정보 없음, rankings에서 검색 필요)");
+                // Debug.Log($"🏆 [GetWinnerElement] winner.playerId: {winnerId} (element 정보 없음, rankings에서 검색 필요)");
             }
             
             return "None";
@@ -2362,7 +2247,7 @@ void Start()
     /// </summary>
     void PlayElementEndVideo(string elementName)
     {
-        Debug.Log($"🎥 [PlayElementEndVideo] element: {elementName}");
+        // Debug.Log($"🎥 [PlayElementEndVideo] element: {elementName}");
 
         if (endVideoPlayer == null)
         {
@@ -2464,7 +2349,7 @@ void Start()
         StopGameVideo();
         StopIdleVideo();
 
-        Debug.Log($"▶️ [PlayElementEndVideo] 크로스페이드 완료 - Element: {elementName}, Clip: {clip.name}");
+        // Debug.Log($"▶️ [PlayElementEndVideo] 크로스페이드 완료 - Element: {elementName}, Clip: {clip.name}");
         endFadeCoroutine = null;
     }
     
@@ -2478,7 +2363,7 @@ void Start()
             if (endVideoPlayer.isPlaying)
             {
                 endVideoPlayer.Stop();
-                Debug.Log("⏹️ 종료 영상 정지");
+                // Debug.Log("⏹️ 종료 영상 정지");
             }
             endVideoPlayer.time = 0;
             endVideoPlayer.clip = null; // 클립 해제
@@ -2487,7 +2372,7 @@ void Start()
         if (endImage != null)
         {
             endImage.gameObject.SetActive(false);
-            Debug.Log("🖼️ 종료 영상 화면 비활성화");
+            // Debug.Log("🖼️ 종료 영상 화면 비활성화");
         }
     }
 

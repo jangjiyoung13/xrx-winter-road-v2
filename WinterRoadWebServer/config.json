@@ -28,8 +28,8 @@
   "ddns": {
     "enabled": false,
     "provider": "dynu",
-    "hostname": "",
-    "password": "",
+    "hostname": "yetipang.freeddns.org",
+    "password": "yetipang1234",
     "updateIntervalMinutes": 5
   }
 }

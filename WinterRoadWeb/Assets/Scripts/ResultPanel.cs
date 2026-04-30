@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -13,13 +14,14 @@ public class ResultPanel : MonoBehaviour
     [DllImport("__Internal")]
     private static extern int IsIOSPlatform();
 
-    // [iOS 전용] 스크린샷 URL 사전 준비 → HTML 링크에 바인딩
+    // [iOS 전용 - 이미지 오버레이 방식]
+    // 자동 캡처 + 업로드 완료 후 즉시 호출 — <img>를 WebGL 위에 띄워 길게 누르기 안내
     [DllImport("__Internal")]
-    private static extern void PrepareScreenshotURL_iOS(string base64);
+    private static extern void ShowImageOverlay_iOS(string url, string guideText);
 
-    // [iOS 전용] 저장 링크 숨기기 및 Blob URL 정리
+    // [iOS 전용] 결과창 닫힐 때 오버레이 숨김
     [DllImport("__Internal")]
-    private static extern void HideScreenshotLink_iOS();
+    private static extern void HideImageOverlay_iOS();
 
     // [Android / Desktop 전용] <a download> 방식 즉시 다운로드
     [DllImport("__Internal")]
@@ -57,12 +59,16 @@ public class ResultPanel : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private float buttonActivationDelay = 2f;
     [SerializeField] private GamePanel gamePanel;              // 게임 패널 (최대콤보 조회용)
-    
+
+    [Header("업로드 실패 UI (iOS 전용)")]
+    [SerializeField] private GameObject uploadFailPanel;       // 업로드 실패 시 안내 패널 (직접 캡처 안내)
+
     private string myPlayerId;
     private List<GameObject> spawnedResultItems = new List<GameObject>();
     private Coroutine buttonActivationCoroutine;
     private Coroutine iosCaptureCoroutine;
     private bool isCapturing = false;
+    private string iosDownloadUrl;                              // [iOS-Overlay] 사전 업로드된 다운로드 URL
     
     private void Start()
     {
@@ -116,18 +122,24 @@ public class ResultPanel : MonoBehaviour
 #if UNITY_WEBGL && !UNITY_EDITOR
         returnToLobbyButton.gameObject.SetActive(false);
 
+        // 업로드 실패 패널은 iOS 업로드 실패 시에만 노출. 결과창 진입 시점엔 항상 닫힌 상태로 시작.
+        // (이전 세션 잔재 또는 씬 초기 활성 배치로 Android/Desktop 사용자에게 잘못 보이는 것을 방지)
+        if (uploadFailPanel != null)
+            uploadFailPanel.SetActive(false);
+
         // ===========================================
         // 플랫폼 분기: iOS는 HTML 링크 방식, 그 외는 Unity 버튼 방식
         // ===========================================
         if (IsRuntimeIOS())
         {
-            // [iOS] Unity 버튼 숨기고 HTML 오버레이 링크 사용 (자동 캡처)
-            Debug.Log("📱 [iOS] HTML 링크 방식으로 저장 기능 활성화");
+            // [iOS] 이미지 오버레이 방식 — 캡처 버튼 숨기고 자동 오버레이
+            Debug.Log("📱 [iOS-Overlay] 자동 캡처 시작 (업로드 완료 후 오버레이 자동 표시)");
             captureToScreenButton.gameObject.SetActive(false);
+            iosDownloadUrl = null;
 
             if (iosCaptureCoroutine != null)
                 StopCoroutine(iosCaptureCoroutine);
-            iosCaptureCoroutine = StartCoroutine(PrepareIOSScreenshotCoroutine());
+            iosCaptureCoroutine = StartCoroutine(PrepareIOSScreenshotCoroutine_DownloadManager());
         }
         else
         {
@@ -340,14 +352,19 @@ public class ResultPanel : MonoBehaviour
             iosCaptureCoroutine = null;
         }
 
+        iosDownloadUrl = null;
+
+        if (uploadFailPanel != null)
+            uploadFailPanel.SetActive(false);
+
 #if UNITY_WEBGL && !UNITY_EDITOR
-        if (IsRuntimeIOS())
+        try
         {
-            try { HideScreenshotLink_iOS(); }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning($"⚠️ [iOS] 저장 링크 정리 중 오류(무시 가능): {e.Message}");
-            }
+            HideImageOverlay_iOS();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"❌ [iOS-Overlay] 숨김 호출 실패: {e.Message}");
         }
 #endif
     }
@@ -360,23 +377,31 @@ public class ResultPanel : MonoBehaviour
     {
         if (isCapturing) return;
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+        // iOS는 캡처 버튼이 비활성화되어 있어 이 핸들러가 호출되지 않지만,
+        // 안전을 위해 가드 — iOS는 자동 오버레이 방식이므로 여기선 아무 동작 안 함.
+        if (IsRuntimeIOS())
+        {
+            Debug.LogWarning("⚠️ [iOS-Overlay] iOS에서 캡처 버튼 클릭 — 무시 (자동 오버레이 사용)");
+            return;
+        }
+#endif
+
         Debug.Log("📸 [Android/Desktop] 화면 캡처 시작...");
         StartCoroutine(CaptureScreenCoroutine());
     }
 
     /// <summary>
-    /// [iOS 전용] 결과창 표시 직후 자동으로 캡처를 수행하여
-    /// HTML 오버레이 링크에 Blob URL을 미리 바인딩한다.
-    /// Unity 버튼 클릭 → window.open 경로가 Safari 팝업 차단에 걸리기 때문에
-    /// 사용자가 HTML <a> 태그를 직접 탭하도록 사전 준비하는 방식.
+    /// [iOS-Overlay] 결과창 진입 직후 백그라운드로 캡처 + 서버 업로드를 수행한다.
+    /// 발급된 URL은 iosDownloadUrl에 보관되고 즉시 ShowImageOverlay_iOS로 전달되어
+    /// WebGL 위에 <img> 오버레이로 표시 — 사용자가 길게 누르면 사진 앱에 저장.
     /// </summary>
-    private IEnumerator PrepareIOSScreenshotCoroutine()
+    private IEnumerator PrepareIOSScreenshotCoroutine_DownloadManager()
     {
-        // 컨페티 연출 + 결과 UI 스폰 완료 대기
         yield return new WaitForSeconds(1.5f);
         yield return new WaitForEndOfFrame();
 
-        Debug.Log("📸 [iOS] 자동 캡처 시작");
+        Debug.Log("📸 [iOS-Overlay] 백그라운드 캡처 시작");
 
         Texture2D screenshot = null;
         try
@@ -385,14 +410,16 @@ public class ResultPanel : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"❌ [iOS] 캡처 실패: {e.Message}");
+            Debug.LogError($"❌ [iOS-Overlay] 캡처 실패: {e.Message}");
+            ShowUploadFail();
             iosCaptureCoroutine = null;
             yield break;
         }
 
         if (screenshot == null)
         {
-            Debug.LogError("❌ [iOS] 캡처 결과 텍스처가 null입니다");
+            Debug.LogError("❌ [iOS-Overlay] 캡처 결과 텍스처가 null");
+            ShowUploadFail();
             iosCaptureCoroutine = null;
             yield break;
         }
@@ -401,19 +428,88 @@ public class ResultPanel : MonoBehaviour
         string base64 = System.Convert.ToBase64String(pngData);
         Destroy(screenshot);
 
+        string jsonPayload = "{\"image\":\"" + base64 + "\"}";
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonPayload);
+
+        using (UnityWebRequest www = new UnityWebRequest("/api/upload-screenshot", "POST"))
+        {
+            www.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            www.downloadHandler = new DownloadHandlerBuffer();
+            www.SetRequestHeader("Content-Type", "application/json");
+
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError($"❌ [iOS-Overlay] 업로드 실패: {www.error}");
+                ShowUploadFail();
+                iosCaptureCoroutine = null;
+                yield break;
+            }
+
+            string response = www.downloadHandler.text;
+            ScreenshotUploadResponse parsed = null;
+
+            try
+            {
+                parsed = JsonUtility.FromJson<ScreenshotUploadResponse>(response);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"❌ [iOS-Overlay] 응답 파싱 실패: {e.Message} / body={response}");
+                ShowUploadFail();
+                iosCaptureCoroutine = null;
+                yield break;
+            }
+
+            if (parsed == null || string.IsNullOrEmpty(parsed.url))
+            {
+                Debug.LogError($"❌ [iOS-Overlay] 응답에 url 필드가 없음: {response}");
+                ShowUploadFail();
+                iosCaptureCoroutine = null;
+                yield break;
+            }
+
+            iosDownloadUrl = parsed.url;
+            Debug.Log($"✅ [iOS-Overlay] 업로드 완료, URL={iosDownloadUrl}");
+
 #if UNITY_WEBGL && !UNITY_EDITOR
-        try
-        {
-            PrepareScreenshotURL_iOS(base64);
-            Debug.Log("✅ [iOS] HTML 저장 링크 활성화 완료");
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"❌ [iOS] URL 준비 중 오류: {e.Message}");
-        }
+            try
+            {
+                string guide = LocaleHelper.Get(
+                    "RESULT_IOS_SAVE_GUIDE",
+                    "이미지를 길게 눌러 사진에 저장하세요"
+                );
+                ShowImageOverlay_iOS(iosDownloadUrl, guide);
+                Debug.Log("📸 [iOS-Overlay] 이미지 오버레이 표시 트리거 완료");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"❌ [iOS-Overlay] 오버레이 호출 실패: {e.Message}");
+            }
 #endif
+        }
 
         iosCaptureCoroutine = null;
+    }
+
+    /// <summary>
+    /// [iOS-Overlay] 업로드 실패 시 안내 패널 노출 + 캡처 버튼 비활성 유지.
+    /// 사용자가 직접 스크린샷을 찍도록 패널 내부에 안내 문구를 둔다.
+    /// </summary>
+    private void ShowUploadFail()
+    {
+        if (uploadFailPanel != null)
+            uploadFailPanel.SetActive(true);
+
+        if (captureToScreenButton != null)
+            captureToScreenButton.interactable = false;
+    }
+
+    [System.Serializable]
+    private class ScreenshotUploadResponse
+    {
+        public string url;
     }
     
     private IEnumerator CaptureScreenCoroutine()

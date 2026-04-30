@@ -18,6 +18,7 @@ public partial class SettingsForm : Form
     private TextBox txtDdnsPassword = null!;
     private TextBox txtOscHost = null!;
     private NumericUpDown numOscPort = null!;
+    private CheckBox chkAutoStart = null!;
 
     public SettingsForm(AppSettings settings)
     {
@@ -43,7 +44,7 @@ public partial class SettingsForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 3,
-            RowCount = 14,
+            RowCount = 15,
             Padding = new Padding(15)
         };
         mainPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -149,7 +150,13 @@ public partial class SettingsForm : Form
         mainPanel.SetColumnSpan(txtDdnsPassword, 2);
         mainPanel.Controls.Add(txtDdnsPassword, 1, 12);
 
-        // Row 13: Buttons
+        // Row 13: Auto Start
+        mainPanel.Controls.Add(new Label { Text = "자동 시작:", Anchor = AnchorStyles.Left, AutoSize = true }, 0, 13);
+        chkAutoStart = new CheckBox { Text = "런처 시작 시 자동으로 시작 (5초 후, Esc로 취소)", AutoSize = true };
+        mainPanel.SetColumnSpan(chkAutoStart, 2);
+        mainPanel.Controls.Add(chkAutoStart, 1, 13);
+
+        // Row 14: Buttons
         var buttonPanel = new FlowLayoutPanel
         {
             FlowDirection = FlowDirection.RightToLeft,
@@ -163,7 +170,7 @@ public partial class SettingsForm : Form
 
         buttonPanel.Controls.Add(btnCancel);
         buttonPanel.Controls.Add(btnSave);
-        mainPanel.Controls.Add(buttonPanel, 0, 13);
+        mainPanel.Controls.Add(buttonPanel, 0, 14);
 
         this.Controls.Add(mainPanel);
         this.AcceptButton = btnSave;
@@ -210,6 +217,9 @@ public partial class SettingsForm : Form
         txtOscHost.Text = _settings.OscHost;
         int oscPortClamped = Math.Clamp(_settings.OscPort, (int)numOscPort.Minimum, (int)numOscPort.Maximum);
         numOscPort.Value = oscPortClamped;
+
+        // Auto start
+        chkAutoStart.Checked = _settings.AutoStartOnLaunch;
     }
 
     private void BtnBrowseServer_Click(object? sender, EventArgs e)
@@ -275,6 +285,9 @@ public partial class SettingsForm : Form
         // TD (OSC) settings
         _settings.OscHost = txtOscHost.Text.Trim();
         _settings.OscPort = (int)numOscPort.Value;
+
+        // Auto start
+        _settings.AutoStartOnLaunch = chkAutoStart.Checked;
 
         // Sync settings to server config.json
         SyncDdnsToServerConfig();

@@ -23,6 +23,9 @@ public class AppSettings
     public string OscHost { get; set; } = "";
     public int OscPort { get; set; } = 50013;
 
+    // 런처 시작 시 자동으로 "시작" 버튼 클릭 (현장 무인 운영용)
+    public bool AutoStartOnLaunch { get; set; } = false;
+
     public static AppSettings Load()
     {
         try

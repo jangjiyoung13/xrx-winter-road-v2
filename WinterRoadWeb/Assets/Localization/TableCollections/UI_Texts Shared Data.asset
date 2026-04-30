@@ -127,6 +127,14 @@ MonoBehaviour:
     m_Key: SYS_ERROR_UNKNOWN_STATE
     m_Metadata:
       m_Items: []
+  - m_Id: 64064418885918720
+    m_Key: SYS_ERROR_CAPTURE_ERROR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64148740749910016
+    m_Key: RESULT_IOS_SAVE_GUIDE
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

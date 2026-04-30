@@ -4,19 +4,56 @@ public partial class MainForm : Form
 {
     private readonly AppSettings _settings;
     private LauncherService? _launcher;
+    private bool _autoStartCancelled = false;
 
     private Label lblServerStatus = null!;
     private Label lblClientStatus = null!;
+    private Label lblTdStatus = null!;
     private TextBox txtLog = null!;
     private Button btnStart = null!;
     private Button btnStop = null!;
     private Button btnSettings = null!;
+
+    // TD(LED) 상태 폴링용 — 1초 간격으로 GET /api/td-state 호출.
+    private static readonly HttpClient _tdHttpClient = new HttpClient { Timeout = TimeSpan.FromMilliseconds(500) };
+    private System.Windows.Forms.Timer? _tdPollTimer;
 
     public MainForm()
     {
         _settings = AppSettings.Load();
         InitializeComponent();
         UpdateStatusLabels(ServiceStatus.Idle, ServiceStatus.Idle);
+
+        // 자동 시작 모드: 폼이 표시되면 카운트다운 후 시작 자동 호출 (Esc로 취소 가능)
+        this.KeyPreview = true;
+        this.KeyDown += (s, e) =>
+        {
+            if (e.KeyCode == Keys.Escape) _autoStartCancelled = true;
+        };
+        this.Shown += MainForm_Shown;
+    }
+
+    private async void MainForm_Shown(object? sender, EventArgs e)
+    {
+        if (!_settings.AutoStartOnLaunch) return;
+
+        AppendLog("자동 시작 모드 — 5초 후 시작합니다 (Esc로 취소).");
+        for (int i = 5; i >= 1; i--)
+        {
+            if (_autoStartCancelled)
+            {
+                AppendLog("자동 시작이 취소되었습니다.");
+                return;
+            }
+            AppendLog($"  ...{i}초");
+            await Task.Delay(1000);
+        }
+        if (_autoStartCancelled)
+        {
+            AppendLog("자동 시작이 취소되었습니다.");
+            return;
+        }
+        BtnStart_Click(this, EventArgs.Empty);
     }
 
     private void InitializeComponent()
@@ -51,9 +88,9 @@ public partial class MainForm : Form
         var statusPanel = new TableLayoutPanel
         {
             Dock = DockStyle.Top,
-            Height = 60,
+            Height = 90,
             ColumnCount = 2,
-            RowCount = 2,
+            RowCount = 3,
             Padding = new Padding(10, 0, 10, 0)
         };
         statusPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
@@ -63,11 +100,15 @@ public partial class MainForm : Form
         lblServerStatus = new Label { Text = "● 대기 중", Anchor = AnchorStyles.Left, AutoSize = true, ForeColor = Color.Gray };
         var lblClientTitle = new Label { Text = "클라이언트 상태:", Anchor = AnchorStyles.Left, AutoSize = true };
         lblClientStatus = new Label { Text = "● 대기 중", Anchor = AnchorStyles.Left, AutoSize = true, ForeColor = Color.Gray };
+        var lblTdTitle = new Label { Text = "LED(TD) 상태:", Anchor = AnchorStyles.Left, AutoSize = true };
+        lblTdStatus = new Label { Text = "● --", Anchor = AnchorStyles.Left, AutoSize = true, ForeColor = Color.DimGray };
 
         statusPanel.Controls.Add(lblServerTitle, 0, 0);
         statusPanel.Controls.Add(lblServerStatus, 1, 0);
         statusPanel.Controls.Add(lblClientTitle, 0, 1);
         statusPanel.Controls.Add(lblClientStatus, 1, 1);
+        statusPanel.Controls.Add(lblTdTitle, 0, 2);
+        statusPanel.Controls.Add(lblTdStatus, 1, 2);
 
         // Log TextBox
         txtLog = new TextBox
@@ -132,6 +173,65 @@ public partial class MainForm : Form
         this.ResumeLayout();
 
         AppendLog("시작을 눌러주세요...");
+
+        // TD(LED) 상태 폴링 시작 — 1초 간격, 서버 미가동 시엔 자연스럽게 "--" 유지.
+        StartTdStatePolling();
+    }
+
+    private void StartTdStatePolling()
+    {
+        if (_tdPollTimer != null) return;
+        _tdPollTimer = new System.Windows.Forms.Timer { Interval = 1000 };
+        _tdPollTimer.Tick += async (_, _) => await PollTdStateAsync();
+        _tdPollTimer.Start();
+    }
+
+    private void StopTdStatePolling()
+    {
+        if (_tdPollTimer == null) return;
+        _tdPollTimer.Stop();
+        _tdPollTimer.Dispose();
+        _tdPollTimer = null;
+    }
+
+    private async Task PollTdStateAsync()
+    {
+        string url = $"http://{_settings.ServerIP}:{_settings.ServerPort}/api/td-state";
+        try
+        {
+            using var resp = await _tdHttpClient.GetAsync(url);
+            if (!resp.IsSuccessStatusCode)
+            {
+                ApplyTdState(null);
+                return;
+            }
+            var json = await resp.Content.ReadAsStringAsync();
+            // 초경량 파싱 — System.Text.Json 사용 (이미 AppSettings에서 사용 중).
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            string? tdState = root.TryGetProperty("tdState", out var s) ? s.GetString() : null;
+            ApplyTdState(tdState);
+        }
+        catch
+        {
+            // 서버 미가동 / 타임아웃 / 연결 거부 등 → "--" 표시
+            ApplyTdState(null);
+        }
+    }
+
+    private void ApplyTdState(string? tdState)
+    {
+        SafeInvoke(() =>
+        {
+            (lblTdStatus.Text, lblTdStatus.ForeColor) = tdState switch
+            {
+                "idle"                    => ("● PRESET", Color.Gray),
+                "transitioning_to_live"   => ("● → LIVE", Color.Orange),
+                "live"                    => ("● LIVE", Color.LimeGreen),
+                "transitioning_to_preset" => ("● → PRESET", Color.Orange),
+                _                         => ("● --", Color.DimGray)
+            };
+        });
     }
 
     private async void BtnStart_Click(object? sender, EventArgs e)
@@ -272,6 +372,7 @@ public partial class MainForm : Form
 
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
+        StopTdStatePolling();
         _launcher?.Stop();
         base.OnFormClosing(e);
     }

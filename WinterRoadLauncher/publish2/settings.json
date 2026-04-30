@@ -1,0 +1,14 @@
+{
+  "ServerBatPath": "D:\\xrx-winter-road\\WinterRoadWebServer\\start-server.bat",
+  "ClientExePath": "D:\\xrx-winter-road\\WinterRoadDesktop\\Build\\WinterRoadDesktop.exe",
+  "ServerIP": "localhost",
+  "ServerPort": 3000,
+  "ServerWaitSeconds": 30,
+  "SelectedMonitorIndex": 1,
+  "DdnsEnabled": false,
+  "DdnsHostname": "yetipang.freeddns.org",
+  "DdnsPassword": "yetipang1234",
+  "OscHost": "",
+  "OscPort": 50013,
+  "AutoStartOnLaunch": true
+}

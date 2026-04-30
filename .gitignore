@@ -39,6 +39,9 @@
 *.unityproj
 *.sln
 *.sln.meta
+
+# 단, .NET 런처 프로젝트의 csproj는 추적 (Unity 자동생성 csproj와 구분)
+!/WinterRoadLauncher/WinterRoadLauncher.csproj
 *.suo
 *.tmp
 *.user

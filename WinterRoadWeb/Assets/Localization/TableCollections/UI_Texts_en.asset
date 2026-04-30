@@ -130,6 +130,14 @@ MonoBehaviour:
     m_Localized: For the best experience,\nplease adjust your device volume.
     m_Metadata:
       m_Items: []
+  - m_Id: 64064418885918720
+    m_Localized: Auto-save failed. \nPlease take a screenshot manually.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64148740749910016
+    m_Localized: Long-press the image to save it to Photos
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -190,7 +190,8 @@ wss.on('close', () => {
 const PORT = process.env.PORT || config.server.port;
 
 app.use(cors());
-app.use(express.json());
+// limit '20mb': iOS 스크린샷 Base64 업로드(/api/upload-screenshot) 대응
+app.use(express.json({ limit: '20mb' }));
 
 // Unity WebGL 빌드 정적 파일 서빙
 app.use('/unity', express.static(path.join(__dirname, 'UnityWebGLBuild'), {
@@ -235,6 +236,75 @@ function getContentType(filePath) {
     };
     return mimeTypes[ext] || 'application/octet-stream';
 }
+
+// ========================================
+// 스크린샷 임시 저장 (iOS Download Manager 용)
+// - 결과창 진입 시 ResultPanel.cs가 PNG Base64를 업로드
+// - 발급된 다운로드 URL을 jslib가 사용자 제스처 컨텍스트에서 트리거
+// - 10분 TTL 메모리 보관
+// ========================================
+const screenshotStore = new Map();
+const SCREENSHOT_TTL_MS = 10 * 60 * 1000;
+const SCREENSHOT_MAX_SIZE = 15 * 1024 * 1024;
+
+app.post('/api/upload-screenshot', (req, res) => {
+    try {
+        if (!req.body || !req.body.image) {
+            return res.status(400).json({ error: 'image field required' });
+        }
+
+        const buffer = Buffer.from(req.body.image, 'base64');
+
+        if (buffer.length > SCREENSHOT_MAX_SIZE) {
+            return res.status(413).json({ error: 'image too large' });
+        }
+
+        const id = uuidv4();
+        screenshotStore.set(id, {
+            buffer,
+            createdAt: Date.now()
+        });
+
+        console.log(`[Screenshot] Uploaded id=${id}, size=${buffer.length}B, total=${screenshotStore.size}`);
+
+        res.json({ url: `/api/download/${id}.png` });
+    } catch (err) {
+        console.error('[Screenshot] Upload error:', err.message);
+        res.status(500).json({ error: 'upload failed' });
+    }
+});
+
+app.get('/api/download/:filename', (req, res) => {
+    const id = req.params.filename.replace(/\.png$/, '');
+    const entry = screenshotStore.get(id);
+
+    if (!entry) {
+        return res.status(404).send('Screenshot expired or not found');
+    }
+
+    const downloadName = `WinterRoad_${Date.now()}.png`;
+
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', `attachment; filename="${downloadName}"`);
+    res.setHeader('Content-Length', entry.buffer.length);
+    res.send(entry.buffer);
+
+    console.log(`[Screenshot] Downloaded id=${id}, name=${downloadName}`);
+});
+
+setInterval(() => {
+    const now = Date.now();
+    let removed = 0;
+    for (const [id, entry] of screenshotStore) {
+        if (now - entry.createdAt > SCREENSHOT_TTL_MS) {
+            screenshotStore.delete(id);
+            removed++;
+        }
+    }
+    if (removed > 0) {
+        console.log(`[Screenshot] Cleaned up ${removed} expired entries, remaining=${screenshotStore.size}`);
+    }
+}, 60 * 1000);
 
 // ========================================
 // 게임 상태 관리 — 개인전 (Free-for-All)
@@ -298,7 +368,11 @@ class GameManager {
             // 도달 시 자동 발사. 같은 방향 명령은 무시하여 영상 꼬임 방지.
             tdState: 'idle', // 'idle' | 'transitioning_to_live' | 'live' | 'transitioning_to_preset'
             tdPendingCommand: null, // null | 'live' | 'preset'
-            tdTransitionTimer: null // setTimeout 핸들 (transition 완료 대기 중일 때)
+            tdTransitionTimer: null, // setTimeout 핸들 (transition 완료 대기 중일 때)
+            // QR 접속(playerHello)은 받았지만 아무도 입장(setNickname)하지 않은 채 30초 경과 시
+            // /goto_preset 호출하여 TD가 무한 live 상태로 머무는 것을 방지하기 위한 idle 타이머.
+            // 추가 playerHello가 들어오면 30초로 리셋.
+            idleLobbyTimer: null
         };
         this.rooms.set(finalRoomId, room);
         console.log(`Room created: ${finalRoomId}`);
@@ -361,6 +435,8 @@ class GameManager {
 
             // 첫 번째 플레이어 → 로비 타이머 시작 + TD 트리거 (디바운스됨)
             if (room.lobbyPlayers.size === 1) {
+                // 첫 입장이 발생했으므로 빈 lobby idle 타이머는 더 이상 의미 없음 - 취소
+                this.cancelIdleLobbyTimer(room);
                 this.startLobbyTimer(roomId);
                 this.maybeTriggerWinterRoadStart(room);
                 console.log(`First player joined lobby - TD trigger attempted (state=${room.tdState})`);
@@ -527,6 +603,43 @@ class GameManager {
             console.log(`Lobby timer cancelled`);
 
             this.broadcastToAll(roomId, { type: 'lobbyTimerCancelled' });
+        }
+    }
+
+    // ===== 빈 lobby idle 타이머 (QR 접속만 하고 입장 안 한 상태 30초 후 /goto_preset) =====
+    // playerHello 수신 시 시작/리셋, setNickname 첫 입장 시 취소.
+    // 만료 시 lobbyPlayers가 여전히 비어있으면 maybeTriggerWinterRoadEnd 호출.
+    startIdleLobbyTimer(room) {
+        if (!room) return;
+        if (room.status !== 'lobby') return;
+
+        const IDLE_LOBBY_TIMEOUT_MS = 30000;
+
+        // 기존 핸들 있으면 정리하고 재설정 (자동 리셋 동작)
+        if (room.idleLobbyTimer) {
+            clearTimeout(room.idleLobbyTimer);
+        }
+
+        console.log(`[IdleLobby] timer (re)started ${IDLE_LOBBY_TIMEOUT_MS}ms (room=${room.id})`);
+
+        room.idleLobbyTimer = setTimeout(() => {
+            room.idleLobbyTimer = null;
+            // 만료 가드: 여전히 lobby 상태이고 입장자 0명일 때만 goto_preset
+            if (room.status !== 'lobby' || room.lobbyPlayers.size > 0) {
+                console.log(`[IdleLobby] timeout fired but state changed - skip (status=${room.status}, lobby=${room.lobbyPlayers.size})`);
+                return;
+            }
+            console.log(`[IdleLobby] no entry for ${IDLE_LOBBY_TIMEOUT_MS}ms → request /goto_preset (room=${room.id}, tdState=${room.tdState})`);
+            this.maybeTriggerWinterRoadEnd(room);
+        }, IDLE_LOBBY_TIMEOUT_MS);
+    }
+
+    cancelIdleLobbyTimer(room) {
+        if (!room) return;
+        if (room.idleLobbyTimer) {
+            clearTimeout(room.idleLobbyTimer);
+            room.idleLobbyTimer = null;
+            console.log(`[IdleLobby] timer cancelled (room=${room.id})`);
         }
     }
 
@@ -1610,6 +1723,9 @@ wss.on('connection', (ws, req) => {
                     if (room) {
                         console.log(`playerHello received → request /goto_live (room=${roomId}, tdState=${room.tdState})`);
                         gameManager.maybeTriggerWinterRoadStart(room);
+                        // 입장(setNickname) 없이 30초 경과하면 /goto_preset 호출.
+                        // 추가 playerHello마다 타이머 리셋.
+                        gameManager.startIdleLobbyTimer(room);
                     } else {
                         console.warn(`playerHello: room '${roomId}' not found`);
                     }
@@ -2062,6 +2178,21 @@ app.post('/api/reset-game/:roomId', (req, res) => {
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
     }
+});
+
+// 런처 등 외부 도구가 TD(LED) 상태를 폴링할 때 사용.
+// 멀티룸 미사용 가정 — 첫 번째 room의 tdState만 반환.
+app.get('/api/td-state', (req, res) => {
+    const firstRoom = gameManager.rooms.values().next().value;
+    if (!firstRoom) {
+        return res.json({ ok: true, roomId: null, tdState: 'idle', pending: null });
+    }
+    res.json({
+        ok: true,
+        roomId: firstRoom.id,
+        tdState: firstRoom.tdState,
+        pending: firstRoom.tdPendingCommand
+    });
 });
 
 app.post('/api/generate-qr', async (req, res) => {

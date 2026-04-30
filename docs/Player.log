@@ -1,0 +1,82 @@
+Mono path[0] = 'D:/xrx-winter-road/WinterRoadDesktop/Build/WinterRoadDesktop_Data/Managed'
+Mono config path = 'D:/xrx-winter-road/WinterRoadDesktop/Build/MonoBleedingEdge/etc'
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Initialize engine version: 6000.3.10f1 (e35f0c77bd8e)
+[Subsystems] Discovering subsystems at path D:/xrx-winter-road/WinterRoadDesktop/Build/WinterRoadDesktop_Data/UnitySubsystems
+[D3D12 Device Filter] Vendor Name: NVIDIA
+[D3D12 Device Filter] Device Name: NVIDIA GeForce RTX 5070
+[D3D12 Device Filter] Driver Version: 32.0.15.9174
+[D3D12 Device Filter] Feature Level: 12.2
+[D3D12 Device Filter] Graphics Memory: 11943 MB
+[D3D12 Device Filter] Processor Count: 16
+[D3D12 Device Filter] Device Type: Discrete
+GfxDevice: creating device client; kGfxThreadingModeClientWorkerJobs
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce RTX 5070 (ID=0x2f04)
+    Vendor:   NVIDIA
+    VRAM:     11943 MB
+    Driver:   32.0.15.9174
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.087 seconds
+- Finished resetting the current domain, in  0.002 seconds
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+<RI> Initializing input.
+Using Windows.Gaming.Input
+<RI> Input initialized.
+UnloadTime: 0.395600 ms
+Unexpected timestamp values detected. This can occur in H.264 videos not encoded with the baseline profile. Timestamps will be skewed to correct the playback for D:/xrx-winter-road/WinterRoadDesktop/Build/WinterRoadDesktop_Data/sharedassets0.resource
+🔗 커맨드라인에서 서버 URL 설정: ws://localhost:3000
+🎮 Winter Road Desktop - WebSocket 연결 테스트 시작
+🔗 대상 서버: ws://localhost:3000
+🎆 [Element Pool] 풀 초기화 시작 - Element당 풀 크기: 50 (3변형)
+✅ [Element Pool] 파티클 컨테이너 사용: ParticleTransform
+✅ [Element Pool] Joy: 50개 생성 완료 (3변형)
+✅ [Element Pool] Sadness: 50개 생성 완료 (3변형)
+✅ [Element Pool] Courage: 50개 생성 완료 (3변형)
+✅ [Element Pool] Love: 50개 생성 완료 (3변형)
+✅ [Element Pool] Hope: 50개 생성 완료 (3변형)
+✅ [Element Pool] Friendship: 50개 생성 완료 (3변형)
+✅ [Element Pool] 총 6개 Element 풀 초기화 완료 (각 50개, 3변형 셔플)
+✅ [InitGameVideoCanvasGroups] 듀얼 VideoPlayer CanvasGroup 초기화 완료
+🎥 [PlayIdleVideo] Idle 비디오 재생 시작!
+▶️ [PlayIdleVideo] Idle 비디오 재생 - Clip: 0_standby (루프 모드)
+🖥 커맨드라인에서 모니터 인덱스 설정: 0
+🖥 감지된 모니터 수: 2
+  모니터 0: 3440x1440 name=G34WQC A
+  모니터 1: 3840x2160 name=LG ULTRAGEAR+
+🖥 대상 모니터: 0 (3440x1440)
+🖥 창 이동 결과: UnityEngine.AsyncOperation
+🔄 외부 서버 연결 테스트 시작...
+🔄 서버 연결 시도: ws://localhost:3000
+✅ WebSocket 연결 성공!
+🎯 외부 서버와의 통신이 정상적으로 작동합니다.
+🔍 연결 상태 확인 - ws: True, isConnected: True
+📤 기본 연결 테스트 시작... (연결 상태: Open)
+📤 핑 메시지 전송 완료!
+📤 방 참가 요청 전송: {"type":"joinRoom","roomId":"main_room","playerName":"DesktopAdmin"}
+📨 서버 응답 수신: {"type":"pong","timestamp":1777471867223,"originalTimestamp":639131010671749500}
+📊 메시지 길이: 80자
+📨 메시지 큐에 추가됨. 큐 크기: 1
+📨 서버 응답 수신: {"type":"joinedRoom","data":{"playerId":"4acd2a01-0ba3-4c45-ac02-ef11c7b7db08","player":{"id":"4acd2a01-0ba3-4c45-ac02-ef11c7b7db08","name":"DesktopAdmin","score":0,"pressCount":0,"lastPressTime":0,"connected":true,"isAdmin":true,"isObserver":false},"room":{"id":"main_room","status":"lobby","playerCount":0,"remainingTime":60,"qrCodeUrl":"http://0.0.0.0:3000/unity/index.html?room=main_room"},"players":[]}}
+📊 메시지 길이: 408자
+📨 메시지 큐에 추가됨. 큐 크기: 2
+📨 서버 응답 수신: {"type":"playerJoined","data":{"playerId":"4acd2a01-0ba3-4c45-ac02-ef11c7b7db08","playerName":"DesktopAdmin","playerCount":0}}
+📊 메시지 길이: 126자
+📨 메시지 큐에 추가됨. 큐 크기: 3
+🏓 Pong 응답 수신 - 연결 정상!
+🏓 Pong 타임스탬프: 1777471867223
+✅ 관리자로 방 입장 성공!
+🔑 cachedPlayerId 저장: 4acd2a01-0ba3-4c45-ac02-ef11c7b7db08
+👤 자신의 플레이어 정보 - ID: 4acd2a01-0ba3-4c45-ac02-ef11c7b7db08, Name: DesktopAdmin, Admin: True
+👑 관리자 권한 확인됨 - 게임 제어 가능
+🎮 현재 게임 상태: lobby
+👤 새 플레이어 입장
+👤 플레이어 입장 상세 - ID: 4acd2a01-0ba3-4c45-ac02-ef11c7b7db08, 이름: DesktopAdmin (개인전)
